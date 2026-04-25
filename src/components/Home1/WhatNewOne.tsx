@@ -20,6 +20,9 @@ const WhatNewOne: React.FC<Props> = ({ data, start, limit }) => {
 
     const filteredProducts = data.filter((product) => product.type === activeTab && (product.category === 'fashion'));
 
+    
+    const displayProducts = filteredProducts.slice(start, limit).slice(0, 8);
+
     return (
         <>
             <div className="whate-new-block md:pt-20 pt-10">
@@ -44,11 +47,21 @@ const WhatNewOne: React.FC<Props> = ({ data, start, limit }) => {
                         </div>
                     </div>
 
+                    {/* Row 1 */}
                     <div className="list-product hide-product-sold grid lg:grid-cols-4 grid-cols-2 sm:gap-[30px] gap-[20px] md:mt-10 mt-6">
-                        {filteredProducts.slice(start, limit).map((prd, index) => (
-                            <Product data={prd} type='grid' key={index} style='style-1' />
+                        {displayProducts.slice(0, 4).map((prd, index) => (
+                            <Product data={prd} type='grid' key={`row1-${index}`} style='style-1' />
                         ))}
                     </div>
+
+                    {/* Row 2 */}
+                    {displayProducts.length > 4 && (
+                        <div className="list-product hide-product-sold grid lg:grid-cols-4 grid-cols-2 sm:gap-[30px] gap-[20px] mt-6">
+                            {displayProducts.slice(4, 8).map((prd, index) => (
+                                <Product data={prd} type='grid' key={`row2-${index}`} style='style-1' />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </>

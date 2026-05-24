@@ -12,7 +12,7 @@ const Footer = () => {
                         <div className="content-footer py-[60px] flex justify-between flex-wrap gap-y-8">
                             <div className="company-infor basis-1/4 max-lg:basis-full pr-7">
                                 <Link href={'/'} className="logo">
-                                    <div className="heading4">Anvogue</div>
+                                    <div className="heading4">MOSSIM</div>
                                 </Link>
                                 <div className='flex gap-3 mt-3'>
                                     <div className="flex flex-col ">
@@ -21,9 +21,9 @@ const Footer = () => {
                                         <span className="text-button mt-3">Address:</span>
                                     </div>
                                     <div className="flex flex-col ">
-                                        <span className=''>hi.avitex@gmail.com</span>
-                                        <span className='mt-3'>1-333-345-6868</span>
-                                        <span className='mt-3 pt-px'>549 Oak St.Crystal Lake, IL 60014</span>
+                                        <span className=''>info@mossim.net</span>
+                                        <span className='mt-3'>+88 01322-447700</span>
+                                        <span className='mt-3 pt-px'>01 (Kha), Block #A, House No, 14 Rd NO - 2/K/A, Chattogram 4203</span>
                                     </div>
                                 </div>
                             </div>
@@ -86,8 +86,8 @@ const Footer = () => {
                         </div>
                         <div className="footer-bottom py-3 flex items-center justify-between gap-5 max-lg:justify-center max-lg:flex-col border-t border-line">
                             <div className="left flex items-center gap-8">
-                                <div className="copyright caption1 text-secondary">©2023 Anvogue. All Rights Reserved.</div>
-                                <div className="select-block flex items-center gap-5 max-md:hidden">
+                                <div className="copyright caption1 text-secondary">©2026 MOSSIM All Rights Reserved.</div>
+                                {/* <div className="select-block flex items-center gap-5 max-md:hidden">
                                     <div className="choose-language flex items-center gap-1.5">
                                         <select name="language" id="chooseLanguageFooter" className='caption2 bg-transparent'>
                                             <option value="English">English</option>
@@ -104,13 +104,22 @@ const Footer = () => {
                                         </select>
                                         <Icon.CaretDown size={12} color='#1F1F1F' />
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                             <div className="right flex items-center gap-2">
                                 <div className="caption1 text-secondary">Payment:</div>
                                 <div className="payment-img">
                                     <Image
-                                        src={'/images/payment/Frame-0.png'}
+                                        src={'/images/payment/visa.png'}
+                                        width={500}
+                                        height={500}
+                                        alt={'payment'}
+                                        className='w-9'
+                                    />
+                                </div>
+                                                               <div className="payment-img">
+                                    <Image
+                                        src={'/images/payment/mastercard.png'}
                                         width={500}
                                         height={500}
                                         alt={'payment'}
@@ -119,7 +128,7 @@ const Footer = () => {
                                 </div>
                                 <div className="payment-img">
                                     <Image
-                                        src={'/images/payment/Frame-1.png'}
+                                        src={'/images/payment/bkash.png'}
                                         width={500}
                                         height={500}
                                         alt={'payment'}
@@ -128,7 +137,7 @@ const Footer = () => {
                                 </div>
                                 <div className="payment-img">
                                     <Image
-                                        src={'/images/payment/Frame-2.png'}
+                                        src={'/images/payment/nagad.png'}
                                         width={500}
                                         height={500}
                                         alt={'payment'}
@@ -137,7 +146,7 @@ const Footer = () => {
                                 </div>
                                 <div className="payment-img">
                                     <Image
-                                        src={'/images/payment/Frame-3.png'}
+                                        src={'/images/payment/rocket.png'}
                                         width={500}
                                         height={500}
                                         alt={'payment'}
@@ -146,22 +155,14 @@ const Footer = () => {
                                 </div>
                                 <div className="payment-img">
                                     <Image
-                                        src={'/images/payment/Frame-4.png'}
+                                        src={'/images/payment/upay.png'}
                                         width={500}
                                         height={500}
                                         alt={'payment'}
                                         className='w-9'
                                     />
                                 </div>
-                                <div className="payment-img">
-                                    <Image
-                                        src={'/images/payment/Frame-5.png'}
-                                        width={500}
-                                        height={500}
-                                        alt={'payment'}
-                                        className='w-9'
-                                    />
-                                </div>
+ 
                             </div>
                         </div>
                     </div>

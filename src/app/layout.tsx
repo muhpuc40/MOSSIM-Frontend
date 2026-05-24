@@ -15,8 +15,8 @@ const serverTimeLeft: CountdownTimeType = countdownTime();
 const instrument = Instrument_Sans({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Anvogue',
-  description: 'Multipurpose eCommerce Template',
+  title: 'MOSSIM',
+  description: 'Mossim Display Shop offers premium traditional fashion for men, women, kids, and babies. We specialize in elegant Panjabi, Kurta, 3-piece suits, and coordinated family collections, inspired by Bangladeshi culture with quality fabrics and fine craftsmanship. Perfect for festive, casual, and everyday occasions',
 }
 
 export default function RootLayout({

@@ -35,13 +35,13 @@ const MenuOne: React.FC<Props> = ({ props }) => {
     const handleOpenSubNavMobile = (index: number) => {
         setOpenSubNavMobile(openSubNavMobile === index ? null : index)
     }
-// ADD THESE two blocks here:
-const [searchKeyword, setSearchKeyword] = useState<string>('');
+    // ADD THESE two blocks here:
+    const [searchKeyword, setSearchKeyword] = useState<string>('');
 
-const handleSearch = (value: string) => {
-    router.push(`/search-result?query=${value}`)
-    setSearchKeyword('')
-}
+    const handleSearch = (value: string) => {
+        router.push(`/search-result?query=${value}`)
+        setSearchKeyword('')
+    }
     const [fixedHeader, setFixedHeader] = useState(false)
     const [lastScrollPosition, setLastScrollPosition] = useState(0);
 
@@ -83,7 +83,14 @@ const handleSearch = (value: string) => {
                             <i className="icon-category text-2xl"></i>
                         </div>
                         <div className="left flex items-center gap-16">
-                            <Link href={'/'} className='flex items-center max-lg:absolute max-lg:left-1/2 max-lg:-translate-x-1/2'>
+                            <Link href={'/'} className='flex items-center gap-2 max-lg:absolute max-lg:left-1/2 max-lg:-translate-x-1/2'>
+                                <Image
+                                    src="/images/mossim.png"
+                                    alt="MOSSIM Logo"
+                                    width={39}
+                                    height={39}
+                                    className="h-12 w-auto"
+                                />
                                 <div className="heading4">MOSSIM</div>
                             </Link>
                             <div className="menu-main h-full max-lg:hidden">
@@ -277,9 +284,9 @@ const handleSearch = (value: string) => {
                                                                 </li>
                                                             </ul>
                                                         </div>
-                                                       
-                                                       
-                                                        
+
+
+
                                                     </div>
                                                     <div className="banner-ads-block pl-2.5 basis-1/3">
                                                         <div className="banner-ads-item bg-linear rounded-2xl relative overflow-hidden cursor-pointer" onClick={() => handleTypeClick('swimwear')}>
@@ -853,20 +860,20 @@ const handleSearch = (value: string) => {
                                 </div>
                                 <Link href={'/'} className='logo text-3xl font-semibold text-center'>Anvogue</Link>
                             </div>
-<div className="form-search relative mt-2">
-    <Icon.MagnifyingGlass size={20} className='absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer' />
-    <input
-        type="text"
-        placeholder='What are you looking for?'
-        className='h-12 rounded-lg border border-line text-sm w-full pl-10 pr-4'
-        value={searchKeyword}
-        onChange={(e) => setSearchKeyword(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchKeyword)}
-    />
-</div>
+                            <div className="form-search relative mt-2">
+                                <Icon.MagnifyingGlass size={20} className='absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer' />
+                                <input
+                                    type="text"
+                                    placeholder='What are you looking for?'
+                                    className='h-12 rounded-lg border border-line text-sm w-full pl-10 pr-4'
+                                    value={searchKeyword}
+                                    onChange={(e) => setSearchKeyword(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchKeyword)}
+                                />
+                            </div>
                             <div className="list-nav mt-6">
                                 <ul>
- 
+
                                     <li
                                         className={`${openSubNavMobile === 2 ? 'open' : ''}`}
                                         onClick={() => handleOpenSubNavMobile(2)}

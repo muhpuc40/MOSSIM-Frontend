@@ -49,7 +49,7 @@ const SliderOne = () => {
                             <div className="slider-item h-full w-full relative">
                                 <div className="container w-full h-full flex items-center relative">
                                     <div className="text-content basis-1/2">
-                                        <div className="text-sub-display">Sale! Up To 50% Off!</div>
+                                        <div className="text-sub-display">Sale! Up To 60% Off!</div>
                                         <div className="text-display md:mt-5 mt-2">Fashion for Every Occasion</div>
                                         <Link href='/shop/breadcrumb-img' className="button-main md:mt-8 mt-3">Shop Now</Link>
                                     </div>
@@ -69,7 +69,7 @@ const SliderOne = () => {
                             <div className="slider-item h-full w-full relative">
                                 <div className="container w-full h-full flex items-center relative">
                                     <div className="text-content basis-1/2">
-                                        <div className="text-sub-display">Sale! Up To 50% Off!</div>
+                                        <div className="text-sub-display">Sale! Up To 70% Off!</div>
                                         <div className="text-display md:mt-5 mt-2">Stylish Looks for Any Season</div>
                                         <Link href='/shop/breadcrumb-img' className="button-main md:mt-8 mt-3">Shop Now</Link>
                                     </div>

@@ -7,13 +7,8 @@
     "gender": "women",
     "new": true,
     "sale": false,
-    "rate": 4,
     "price": 45,
     "originPrice": 55,
-    "brand": "gucci",
-    "sold": 12,
-    "quantity": 100,
-    "quantityPurchase": 1,
     "sizes": [
       "S",
       "M",

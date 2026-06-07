@@ -1,15 +1,51 @@
 'use client'
 
-import React, { Component } from 'react'
+import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination } from 'swiper/modules';
-import 'swiper/css/bundle';
-import 'swiper/css/effect-fade';
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Autoplay, Pagination } from 'swiper/modules'
+import 'swiper/css/bundle'
+import 'swiper/css/effect-fade'
 
+import { bannersService } from '@/services/banners'
+import type { Banner } from '@/type/Banner'
 
 const SliderOne = () => {
+    const [banners, setBanners] = useState<Banner[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        let mounted = true
+
+        bannersService.list()
+            .then((data) => {
+                if (mounted) setBanners(data)
+            })
+            .catch((err) => {
+                console.error('Banner fetch failed:', err)
+            })
+            .finally(() => {
+                if (mounted) setLoading(false)
+            })
+
+        return () => { mounted = false }
+    }, [])
+
+    if (loading) {
+        return (
+            <div className="slider-block style-one bg-linear xl:h-[860px] lg:h-[800px] md:h-[580px] sm:h-[500px] h-[350px] max-[420px]:h-[320px] w-full">
+                <div className="h-full w-full flex items-center justify-center">
+                    <span className="text-secondary">Loading...</span>
+                </div>
+            </div>
+        )
+    }
+
+    if (banners.length === 0) {
+        return null
+    }
+
     return (
         <>
             <div className="slider-block style-one bg-linear xl:h-[860px] lg:h-[800px] md:h-[580px] sm:h-[500px] h-[350px] max-[420px]:h-[320px] w-full">
@@ -17,74 +53,40 @@ const SliderOne = () => {
                     <Swiper
                         spaceBetween={0}
                         slidesPerView={1}
-                        loop={true}
+                        loop={banners.length > 1}
                         pagination={{ clickable: true }}
                         modules={[Pagination, Autoplay]}
-                        className='h-full relative'
-                        autoplay={{
-                            delay: 4000,
-                        }}
+                        className="h-full relative"
+                        autoplay={{ delay: 4000 }}
                     >
-                        <SwiperSlide>
-                            <div className="slider-item h-full w-full relative">
-                                <div className="container w-full h-full flex items-center relative">
-                                    <div className="text-content basis-1/2">
-                                        <div className="text-sub-display">Sale! Up To 50% Off!</div>
-                                        <div className="text-display md:mt-5 mt-2">Summer Sale Collections</div>
-                                        <Link href='/shop/breadcrumb-img' className="button-main md:mt-8 mt-3">Shop Now</Link>
-                                    </div>
-                                    <div className="sub-img absolute sm:w-1/2 w-3/5 2xl:-right-[60px] -right-[16px] bottom-0">
-                                        <Image
-                                            src={'/images/slider/bg1-1.png'}
-                                            width={670}
-                                            height={936}
-                                            alt='bg1-1'
-                                            priority={true}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </SwiperSlide>
-                        <SwiperSlide>
-                            <div className="slider-item h-full w-full relative">
-                                <div className="container w-full h-full flex items-center relative">
-                                    <div className="text-content basis-1/2">
-                                        <div className="text-sub-display">Sale! Up To 60% Off!</div>
-                                        <div className="text-display md:mt-5 mt-2">Fashion for Every Occasion</div>
-                                        <Link href='/shop/breadcrumb-img' className="button-main md:mt-8 mt-3">Shop Now</Link>
-                                    </div>
-                                    <div className="sub-img absolute w-1/2 2xl:-right-[60px] -right-[0] sm:-bottom-[60px] bottom-0">
-                                        <Image
-                                            src={'/images/slider/bg1-2.png'}
-                                            width={670}
-                                            height={936}
-                                            alt='bg1-2'
-                                            priority={true}
-                                        />
+                        {banners.map((banner) => (
+                            <SwiperSlide key={banner.id}>
+                                <div className="slider-item h-full w-full relative">
+                                    <div className="container w-full h-full flex items-center relative">
+                                        <div className="text-content basis-1/2">
+                                            <div className="text-sub-display">{banner.subtitle}</div>
+                                            <div className="text-display md:mt-5 mt-2">{banner.title}</div>
+                                            <Link
+                                                href={banner.cta_link || '/shop/breadcrumb-img'}
+                                                className="button-main md:mt-8 mt-3"
+                                            >
+                                                {banner.cta_text || 'Shop Now'}
+                                            </Link>
+                                        </div>
+                                        <div className="sub-img absolute sm:w-1/2 w-3/5 2xl:-right-[60px] -right-[16px] bottom-0">
+                                            <Image
+                                                src={banner.image}
+                                                width={670}
+                                                height={936}
+                                                alt={banner.alt_text || banner.title}
+                                                priority
+                                                unoptimized={banner.image.startsWith('http')}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </SwiperSlide>
-                        <SwiperSlide>
-                            <div className="slider-item h-full w-full relative">
-                                <div className="container w-full h-full flex items-center relative">
-                                    <div className="text-content basis-1/2">
-                                        <div className="text-sub-display">Sale! Up To 70% Off!</div>
-                                        <div className="text-display md:mt-5 mt-2">Stylish Looks for Any Season</div>
-                                        <Link href='/shop/breadcrumb-img' className="button-main md:mt-8 mt-3">Shop Now</Link>
-                                    </div>
-                                    <div className="sub-img absolute sm:w-1/2 w-2/3 2xl:-right-[60px] -right-[36px] sm:bottom-0 -bottom-[30px]">
-                                        <Image
-                                            src={'/images/slider/bg1-3.png'}
-                                            width={670}
-                                            height={936}
-                                            alt='bg1-3'
-                                            priority={true}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </SwiperSlide>
+                            </SwiperSlide>
+                        ))}
                     </Swiper>
                 </div>
             </div>

@@ -12,14 +12,11 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useModalWishlistContext } from '@/context/ModalWishlistContext';
 import { useCompare } from '@/context/CompareContext'
 import { useModalCompareContext } from '@/context/ModalCompareContext'
-import Rate from '../Other/Rate';
 import ModalSizeguide from './ModalSizeguide';
 
 const ModalQuickview = () => {
-    const [photoIndex, setPhotoIndex] = useState(0)
-    const [openPopupImg, setOpenPopupImg] = useState(false)
-    const [openSizeGuide, setOpenSizeGuide] = useState<boolean>(false)
     const { selectedProduct, closeQuickview } = useModalQuickviewContext()
+    const [openSizeGuide, setOpenSizeGuide] = useState<boolean>(false)
     const [activeColor, setActiveColor] = useState<string>('')
     const [activeSize, setActiveSize] = useState<string>('')
     const { addToCart, updateCart, cartState } = useCart()
@@ -28,23 +25,17 @@ const ModalQuickview = () => {
     const { openModalWishlist } = useModalWishlistContext()
     const { addToCompare, removeFromCompare, compareState } = useCompare();
     const { openModalCompare } = useModalCompareContext()
-    const percentSale = selectedProduct && Math.floor(100 - ((selectedProduct.price / selectedProduct.originPrice) * 100))
 
-    const handleOpenSizeGuide = () => {
-        setOpenSizeGuide(true);
-    };
+    // Discount comes straight from backend (no frontend calculation)
+    // slug = discount_type ('percent' | 'flat' | ''), rate = discount_value
+    const discountType = selectedProduct?.slug || ''
+    const discountValue = selectedProduct?.rate || 0
+    const hasDiscount = !!discountType && discountValue > 0
 
-    const handleCloseSizeGuide = () => {
-        setOpenSizeGuide(false);
-    };
-
-    const handleActiveColor = (item: string) => {
-        setActiveColor(item)
-    }
-
-    const handleActiveSize = (item: string) => {
-        setActiveSize(item)
-    }
+    const handleOpenSizeGuide = () => setOpenSizeGuide(true)
+    const handleCloseSizeGuide = () => setOpenSizeGuide(false)
+    const handleActiveColor = (item: string) => setActiveColor(item)
+    const handleActiveSize = (item: string) => setActiveSize(item)
 
     const handleIncreaseQuantity = () => {
         if (selectedProduct) {
@@ -74,12 +65,10 @@ const ModalQuickview = () => {
     };
 
     const handleAddToWishlist = () => {
-        // if product existed in wishlit, remove from wishlist and set state to false
         if (selectedProduct) {
             if (wishlistState.wishlistArray.some(item => item.id === selectedProduct.id)) {
                 removeFromWishlist(selectedProduct.id);
             } else {
-                // else, add to wishlist and set state to true
                 addToWishlist(selectedProduct);
             }
         }
@@ -87,13 +76,11 @@ const ModalQuickview = () => {
     };
 
     const handleAddToCompare = () => {
-        // if product existed in wishlit, remove from wishlist and set state to false
         if (selectedProduct) {
             if (compareState.compareArray.length < 3) {
                 if (compareState.compareArray.some(item => item.id === selectedProduct.id)) {
                     removeFromCompare(selectedProduct.id);
                 } else {
-                    // else, add to wishlist and set state to true
                     addToCompare(selectedProduct);
                 }
             } else {
@@ -119,7 +106,7 @@ const ModalQuickview = () => {
                                             src={item}
                                             width={1500}
                                             height={2000}
-                                            alt={item}
+                                            alt={selectedProduct?.name}
                                             priority={true}
                                             className='w-full h-full object-cover'
                                         />
@@ -148,51 +135,42 @@ const ModalQuickview = () => {
                                         onClick={handleAddToWishlist}
                                     >
                                         {wishlistState.wishlistArray.some(item => item.id === selectedProduct?.id) ? (
-                                            <>
-                                                <Icon.Heart size={20} weight='fill' className='text-red' />
-                                            </>
+                                            <Icon.Heart size={20} weight='fill' className='text-red' />
                                         ) : (
-                                            <>
-                                                <Icon.Heart size={20} />
-                                            </>
+                                            <Icon.Heart size={20} />
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex items-center mt-3">
-                                    <Rate currentRate={selectedProduct?.rate} size={14} />
-                                    <span className='caption1 text-secondary'>(1.234 reviews)</span>
-                                </div>
+
+                                {/* Price — discount values come from backend */}
                                 <div className="flex items-center gap-3 flex-wrap mt-5 pb-6 border-b border-line">
-                                    <div className="product-price heading5">${selectedProduct?.price}.00</div>
-                                    <div className='w-px h-4 bg-line'></div>
-                                    <div className="product-origin-price font-normal text-secondary2"><del>${selectedProduct?.originPrice}.00</del></div>
-                                    {selectedProduct?.originPrice && (
-                                        <div className="product-sale caption2 font-semibold bg-green px-3 py-0.5 inline-block rounded-full">
-                                            -{percentSale}%
-                                        </div>
+                                    <div className="product-price heading5">৳{selectedProduct?.price}</div>
+                                    {hasDiscount && (
+                                        <>
+                                            <div className='w-px h-4 bg-line'></div>
+                                            <div className="product-origin-price font-normal text-secondary2">
+                                                <del>৳{selectedProduct?.originPrice}</del>
+                                            </div>
+                                            <div className="product-sale caption2 font-semibold bg-green px-3 py-0.5 inline-block rounded-full">
+                                                {discountType === 'percent' ? `-${discountValue}%` : `-৳${discountValue}`}
+                                            </div>
+                                        </>
                                     )}
                                     <div className='desc text-secondary mt-3'>{selectedProduct?.description}</div>
                                 </div>
+
                                 <div className="list-action mt-6">
+                                    {/* Colors — hex swatches */}
                                     <div className="choose-color">
                                         <div className="text-title">Colors: <span className='text-title color'>{activeColor}</span></div>
                                         <div className="list-color flex items-center gap-2 flex-wrap mt-3">
                                             {selectedProduct?.variation.map((item, index) => (
                                                 <div
-                                                    className={`color-item w-12 h-12 rounded-xl duration-300 relative ${activeColor === item.color ? 'active' : ''}`}
+                                                    className={`color-item w-12 h-12 rounded-xl duration-300 relative cursor-pointer ${activeColor === item.color ? 'active border-2 border-black' : 'border border-line'}`}
                                                     key={index}
-                                                    datatype={item.image}
-                                                    onClick={() => {
-                                                        handleActiveColor(item.color)
-                                                    }}
+                                                    style={{ backgroundColor: item.colorCode }}
+                                                    onClick={() => handleActiveColor(item.color)}
                                                 >
-                                                    <Image
-                                                        src={item.colorImage}
-                                                        width={100}
-                                                        height={100}
-                                                        alt='color'
-                                                        className='rounded-xl'
-                                                    />
                                                     <div className="tag-action bg-black text-white caption2 capitalize px-1.5 py-0.5 rounded-sm">
                                                         {item.color}
                                                     </div>
@@ -200,6 +178,8 @@ const ModalQuickview = () => {
                                             ))}
                                         </div>
                                     </div>
+
+                                    {/* Sizes */}
                                     <div className="choose-size mt-5">
                                         <div className="heading flex items-center justify-between">
                                             <div className="text-title">Size: <span className='text-title size'>{activeSize}</span></div>
@@ -214,7 +194,7 @@ const ModalQuickview = () => {
                                         <div className="list-size flex items-center gap-2 flex-wrap mt-3">
                                             {selectedProduct?.sizes.map((item, index) => (
                                                 <div
-                                                    className={`size-item ${item === 'freesize' ? 'px-3 py-2' : 'w-12 h-12'} flex items-center justify-center text-button rounded-full bg-white border border-line ${activeSize === item ? 'active' : ''}`}
+                                                    className={`size-item ${item.length > 2 ? 'px-3 py-2' : 'w-12 h-12'} flex items-center justify-center text-button rounded-full bg-white border border-line cursor-pointer ${activeSize === item ? 'active' : ''}`}
                                                     key={index}
                                                     onClick={() => handleActiveSize(item)}
                                                 >
@@ -223,6 +203,7 @@ const ModalQuickview = () => {
                                             ))}
                                         </div>
                                     </div>
+
                                     <div className="text-title mt-5">Quantity:</div>
                                     <div className="choose-quantity flex items-center max-xl:flex-wrap lg:justify-between gap-5 mt-3">
                                         <div className="quantity-block md:p-3 max-md:py-1.5 max-md:px-3 flex items-center justify-between rounded-lg border border-line sm:w-[180px] w-[120px] flex-shrink-0">
@@ -243,9 +224,7 @@ const ModalQuickview = () => {
                                     </div>
                                     <div className="flex items-center flex-wrap lg:gap-20 gap-8 gap-y-4 mt-5">
                                         <div className="compare flex items-center gap-3 cursor-pointer" onClick={handleAddToCompare}>
-                                            <div
-                                                className="compare-btn md:w-12 md:h-12 w-10 h-10 flex items-center justify-center border border-line cursor-pointer rounded-xl duration-300 hover:bg-black hover:text-white"
-                                            >
+                                            <div className="compare-btn md:w-12 md:h-12 w-10 h-10 flex items-center justify-center border border-line cursor-pointer rounded-xl duration-300 hover:bg-black hover:text-white">
                                                 <Icon.ArrowsCounterClockwise className='heading6' />
                                             </div>
                                             <span>Compare</span>
@@ -257,97 +236,39 @@ const ModalQuickview = () => {
                                             <span>Share Products</span>
                                         </div>
                                     </div>
+
                                     <div className="more-infor mt-6">
-                                        <div className="flex items-center gap-4 flex-wrap">
-                                            <div className="flex items-center gap-1">
-                                                <Icon.ArrowClockwise className='body1' />
-                                                <div className="text-title">Delivery & Return</div>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <Icon.Question className='body1' />
-                                                <div className="text-title">Ask A Question</div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center flex-wrap gap-1 mt-3">
-                                            <Icon.Timer className='body1' />
-                                            <span className="text-title">Estimated Delivery:</span>
-                                            <span className="text-secondary">14 January - 18 January</span>
-                                        </div>
-                                        <div className="flex items-center flex-wrap gap-1 mt-3">
-                                            <Icon.Eye className='body1' />
-                                            <span className="text-title">38</span>
-                                            <span className="text-secondary">people viewing this product right now!</span>
-                                        </div>
                                         <div className="flex items-center gap-1 mt-3">
                                             <div className="text-title">SKU:</div>
-                                            <div className="text-secondary">53453412</div>
+                                            <div className="text-secondary">{selectedProduct?.brand}</div>
                                         </div>
                                         <div className="flex items-center gap-1 mt-3">
                                             <div className="text-title">Categories:</div>
-                                            <div className="text-secondary">{selectedProduct?.category}, {selectedProduct?.gender}</div>
-                                        </div>
-                                        <div className="flex items-center gap-1 mt-3">
-                                            <div className="text-title">Tag:</div>
-                                            <div className="text-secondary">{selectedProduct?.type}</div>
+                                            <div className="text-secondary capitalize">{selectedProduct?.type}</div>
                                         </div>
                                     </div>
+
                                     <div className="list-payment mt-7">
                                         <div className="main-content lg:pt-8 pt-6 lg:pb-6 pb-4 sm:px-4 px-3 border border-line rounded-xl relative max-md:w-2/3 max-sm:w-full">
                                             <div className="heading6 px-5 bg-white absolute -top-[14px] left-1/2 -translate-x-1/2 whitespace-nowrap">Guranteed safe checkout</div>
                                             <div className="list grid grid-cols-6">
                                                 <div className="item flex items-center justify-center lg:px-3 px-1">
-                                                    <Image
-                                                        src={'/images/payment/visa.png'}
-                                                        width={500}
-                                                        height={450}
-                                                        alt='payment'
-                                                        className='w-full'
-                                                    />
+                                                    <Image src={'/images/payment/visa.png'} width={500} height={450} alt='payment' className='w-full' />
                                                 </div>
                                                 <div className="item flex items-center justify-center lg:px-3 px-1">
-                                                    <Image
-                                                        src={'/images/payment/mastercard.png'}
-                                                        width={500}
-                                                        height={450}
-                                                        alt='payment'
-                                                        className='w-full'
-                                                    />
+                                                    <Image src={'/images/payment/mastercard.png'} width={500} height={450} alt='payment' className='w-full' />
                                                 </div>
                                                 <div className="item flex items-center justify-center lg:px-3 px-1">
-                                                    <Image
-                                                        src={'/images/payment/bkash.png'}
-                                                        width={500}
-                                                        height={450}
-                                                        alt='payment'
-                                                        className='w-full'
-                                                    />
+                                                    <Image src={'/images/payment/bkash.png'} width={500} height={450} alt='payment' className='w-full' />
                                                 </div>
                                                 <div className="item flex items-center justify-center lg:px-3 px-1">
-                                                    <Image
-                                                        src={'/images/payment/nagad.png'}
-                                                        width={500}
-                                                        height={450}
-                                                        alt='payment'
-                                                        className='w-full'
-                                                    />
+                                                    <Image src={'/images/payment/nagad.png'} width={500} height={450} alt='payment' className='w-full' />
                                                 </div>
                                                 <div className="item flex items-center justify-center lg:px-3 px-1">
-                                                    <Image
-                                                        src={'/images/payment/rocket.png'}
-                                                        width={500}
-                                                        height={450}
-                                                        alt='payment'
-                                                        className='w-full'
-                                                    />
+                                                    <Image src={'/images/payment/rocket.png'} width={500} height={450} alt='payment' className='w-full' />
                                                 </div>
                                                 <div className="item flex items-center justify-center lg:px-3 px-1">
-                                                    <Image
-                                                        src={'/images/payment/upay.png'}
-                                                        width={500}
-                                                        height={450}
-                                                        alt='payment'
-                                                        className='w-full'
-                                                    />
+                                                    <Image src={'/images/payment/upay.png'} width={500} height={450} alt='payment' className='w-full' />
                                                 </div>
                                             </div>
                                         </div>
@@ -358,7 +279,6 @@ const ModalQuickview = () => {
                     </div>
                 </div>
             </div>
-
         </>
     );
 };

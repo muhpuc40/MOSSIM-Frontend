@@ -5,7 +5,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1
 /* ── Raw API shapes ─────────────────────────────── */
 interface ApiImage {
     url: string
-    is_primary?: boolean
+    is_primary: boolean
 }
 interface ApiColor {
     color_name: string
@@ -13,93 +13,98 @@ interface ApiColor {
 }
 interface ApiSize {
     size_label: string
-    sort_order?: number
 }
 export interface ApiPrice {
     actual_price: number
     current_price: number
     discount_type: string | null
     discount_value: number
-    currency: { code?: string; symbol: string }
+    currency: { symbol: string }
 }
 export interface ApiVariant {
     id: string
     sku: string
+    is_default: boolean
     color: ApiColor
     size: ApiSize
-    price: ApiPrice
+    price: ApiPrice | null
 }
-export interface ApiListProduct {
+export interface ApiProduct {
     id: string
     product_code: string
     name: string
     description: string
     type: 'man' | 'women' | 'kids' | 'unisex'
     images: ApiImage[]
-    price: ApiPrice | null
     colors: ApiColor[]
-    sizes: ApiSize[]
-}
-export interface ApiDetailProduct extends ApiListProduct {
     variants: ApiVariant[]
 }
 
-/* ── Map API → template's ProductType ──────────── */
-export function mapToProductType(p: ApiListProduct | ApiDetailProduct): ProductType {
-    const allImages = (p.images || []).map((img) => img.url)
-    const primaryImages = (p.images || []).filter((img) => img.is_primary).map((img) => img.url)
-    const firstImage = allImages[0] || ''
+/* ── Helpers ───────────────────────────────────── */
+export function getDefaultVariant(variants: ApiVariant[]): ApiVariant | null {
+    return variants.find((v) => v.is_default) || variants[0] || null
+}
 
-    const variation = (p.colors || []).map((c) => ({
-        color: c.color_name,
-        colorCode: c.color_hex || '#000000',
-        colorImage: firstImage,
-        image: firstImage,
-    }))
+/* ── Variant cache (for Quick View modal) ──────── */
+const variantsCache = new Map<string, ApiVariant[]>()
 
-    const sizes = (p.sizes || []).map((s) => s.size_label)
+export function getProductVariants(productId: string): ApiVariant[] {
+    return variantsCache.get(productId) || []
+}
 
-    // For detail products, price lives in variants. For list, it's at top level.
-    let price = 0
-    let originPrice = 0
-    let discountType = ''
-    let discountValue = 0
-
-    if (p.price) {
-        price = p.price.current_price
-        originPrice = p.price.actual_price
-        discountType = p.price.discount_type || ''
-        discountValue = p.price.discount_value || 0
-    } else if ('variants' in p && p.variants.length > 0) {
-        const firstVariantPrice = p.variants[0].price
-        price = firstVariantPrice.current_price
-        originPrice = firstVariantPrice.actual_price
-        discountType = firstVariantPrice.discount_type || ''
-        discountValue = firstVariantPrice.discount_value || 0
+/* ── Map API → template ProductType ────────────── */
+export function mapToProductType(p: ApiProduct): ProductType {
+    // Cache variants for later lookup
+    if (p.variants && p.variants.length > 0) {
+        variantsCache.set(p.id, p.variants)
     }
 
+    const allImages     = (p.images || []).map((img) => img.url)
+    const primaryImages = (p.images || []).filter((img) => img.is_primary).map((img) => img.url)
+    const firstImage    = allImages[0] || ''
+
+    // Variation = colors (hex-based)
+    const variation = (p.colors || []).map((c) => ({
+        color:      c.color_name,
+        colorCode:  c.color_hex || '#000000',
+        colorImage: firstImage,
+        image:      firstImage,
+    }))
+
+    // All unique sizes (modal/detail filters available ones by color via cache)
+    const allSizes = Array.from(
+        new Set((p.variants || []).map((v) => v.size?.size_label).filter(Boolean))
+    ) as string[]
+
+    // Default variant drives initial price
+    const def = getDefaultVariant(p.variants || [])
+    const price         = def?.price?.current_price ?? 0
+    const originPrice   = def?.price?.actual_price  ?? 0
+    const discountType  = def?.price?.discount_type ?? ''
+    const discountValue = def?.price?.discount_value ?? 0
+
     return {
-        id: p.id,
-        category: 'fashion',
-        type: p.type,
-        name: p.name,
-        gender: p.type,
-        new: false,
-        sale: originPrice > price,
-        rate: discountValue,             // carries discount_value
+        id:               p.id,
+        category:         'fashion',
+        type:             p.type,
+        name:             p.name,
+        gender:           p.type,
+        new:              false,
+        sale:             originPrice > price,
+        rate:             discountValue,                    // carries discount_value
         price,
         originPrice,
-        brand: p.product_code,           // carries product_code
-        sold: 0,
-        quantity: 100,
+        brand:            p.product_code,                   // carries product_code (SKU)
+        sold:             0,
+        quantity:         100,
         quantityPurchase: 1,
-        sizes,
+        sizes:            allSizes,
         variation,
-        thumbImage: primaryImages.length ? primaryImages : allImages.slice(0, 2),
-        images: allImages,
-        description: p.description || '',
-        action: 'add to cart',
-        slug: discountType,              // carries discount_type
+        thumbImage:       primaryImages.length ? primaryImages : allImages.slice(0, 2),
+        images:           allImages,
+        description:      p.description || '',
+        action:           'add to cart',
+        slug:             discountType,                     // carries discount_type
     }
 }
 
@@ -120,14 +125,19 @@ export const productsService = {
         if (!res.ok) throw new Error(`Failed to load products (${res.status})`)
 
         const json = await res.json()
-        return (json.data as ApiListProduct[]).map(mapToProductType)
+        return (json.data as ApiProduct[]).map(mapToProductType)
     },
 
-    show: async (id: string): Promise<ApiDetailProduct> => {
+    show: async (id: string): Promise<ApiProduct> => {
         const res = await fetch(`${API_URL}/products/${id}`, { cache: 'no-store' })
         if (!res.ok) throw new Error(`Product not found (${res.status})`)
 
         const json = await res.json()
-        return json.data as ApiDetailProduct
+        const data = json.data as ApiProduct
+
+        if (data.variants && data.variants.length > 0) {
+            variantsCache.set(data.id, data.variants)
+        }
+        return data
     },
 }

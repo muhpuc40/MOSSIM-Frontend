@@ -633,9 +633,9 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                                     <span className="quantity cart-quantity absolute -right-1.5 -top-1.5 text-xs text-white bg-black w-4 h-4 flex items-center justify-center rounded-full">{cartState.cartArray.length}</span>
                                 </div> */}
                                 <div className="cart-icon max-sm:hidden flex items-center relative cursor-pointer" onClick={openModalCart}>
-    <Icon.Handbag size={24} color='black' />
-    <span className="quantity cart-quantity absolute -right-1.5 -top-1.5 text-xs text-white bg-black w-4 h-4 flex items-center justify-center rounded-full">{cartState.cartArray.length}</span>
-</div>
+                                    <Icon.Handbag size={24} color='black' />
+                                    <span className="quantity cart-quantity absolute -right-1.5 -top-1.5 text-xs text-white bg-black w-4 h-4 flex items-center justify-center rounded-full">{cartState.cartArray.length}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -653,7 +653,7 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                                 >
                                     <Icon.X size={14} />
                                 </div>
-                                <Link href={'/'} className='logo text-3xl font-semibold text-center'>Anvogue</Link>
+                                <Link href={'/'} className='logo text-3xl font-semibold text-center'>MOSSIM</Link>
                             </div>
                             <div className="form-search relative mt-2">
                                 <Icon.MagnifyingGlass size={20} className='absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer' />
@@ -871,7 +871,7 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                                                 <Icon.CaretRight size={20} />
                                             </span>
                                         </a>
-         
+
                                     </li>
                                     <li
                                         className={`${openSubNavMobile === 4 ? 'open' : ''}`}
@@ -883,7 +883,7 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                                             </span>
                                         </a>
                                     </li>
-                                    
+
                                     <li
                                         className={`${openSubNavMobile === 6 ? 'open' : ''}`}
                                         onClick={() => handleOpenSubNavMobile(6)}

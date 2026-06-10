@@ -59,16 +59,16 @@ export function mapToProductType(p: ApiProduct): ProductType {
         variantsCache.set(p.id, p.variants)
     }
 
-    const allImages     = (p.images || []).map((img) => img.url)
+    const allImages = (p.images || []).map((img) => img.url)
     const primaryImages = (p.images || []).filter((img) => img.is_primary).map((img) => img.url)
-    const firstImage    = allImages[0] || ''
+    const firstImage = allImages[0] || ''
 
     // Variation = colors (hex-based)
     const variation = (p.colors || []).map((c) => ({
-        color:      c.color_name,
-        colorCode:  c.color_hex || '#000000',
+        color: c.color_name,
+        colorCode: c.color_hex || '#000000',
         colorImage: firstImage,
-        image:      firstImage,
+        image: firstImage,
     }))
 
     // All unique sizes (modal/detail filters available ones by color via cache)
@@ -78,33 +78,33 @@ export function mapToProductType(p: ApiProduct): ProductType {
 
     // Default variant drives initial price
     const def = getDefaultVariant(p.variants || [])
-    const price         = def?.price?.current_price ?? 0
-    const originPrice   = def?.price?.actual_price  ?? 0
-    const discountType  = def?.price?.discount_type ?? ''
+    const price = def?.price?.current_price ?? 0
+    const originPrice = def?.price?.actual_price ?? 0
+    const discountType = def?.price?.discount_type ?? ''
     const discountValue = def?.price?.discount_value ?? 0
 
     return {
-        id:               p.id,
-        category:         'fashion',
-        type:             p.type,
-        name:             p.name,
-        gender:           p.type,
-        new:              false,
-        sale:             originPrice > price,
-        rate:             discountValue,                    // carries discount_value
+        id: p.id,
+        category: 'fashion',
+        type: p.type,
+        name: p.name,
+        gender: p.type,
+        new: false,
+        sale: originPrice > price,
+        rate: discountValue,                    // carries discount_value
         price,
         originPrice,
-        brand:            p.product_code,                   // carries product_code (SKU)
-        sold:             0,
-        quantity:         100,
+        brand: p.product_code,                   // carries product_code (SKU)
+        sold: 0,
+        quantity: 100,
         quantityPurchase: 1,
-        sizes:            allSizes,
+        sizes: allSizes,
         variation,
-        thumbImage:       primaryImages.length ? primaryImages : allImages.slice(0, 2),
-        images:           allImages,
-        description:      p.description || '',
-        action:           'add to cart',
-        slug:             discountType,                     // carries discount_type
+        thumbImage: primaryImages.length ? primaryImages : allImages.slice(0, 2),
+        images: allImages,
+        description: p.description || '',
+        action: 'add to cart',
+        slug: discountType,                     // carries discount_type
     }
 }
 
@@ -139,5 +139,29 @@ export const productsService = {
             variantsCache.set(data.id, data.variants)
         }
         return data
+    },
+
+    newArrivals: async (limit: number = 12, type?: string): Promise<ProductType[]> => {
+        const search = new URLSearchParams()
+        search.append('limit', String(limit))
+        if (type) search.append('type', type)
+
+        const res = await fetch(`${API_URL}/products/new-arrivals?${search}`, { cache: 'no-store' })
+        if (!res.ok) throw new Error(`Failed to load new arrivals (${res.status})`)
+
+        const json = await res.json()
+        return (json.data as ApiProduct[]).map(mapToProductType)
+    },
+
+    bestSellers: async (limit: number = 12, type?: string): Promise<ProductType[]> => {
+        const search = new URLSearchParams()
+        search.append('limit', String(limit))
+        if (type) search.append('type', type)
+
+        const res = await fetch(`${API_URL}/products/best-sellers?${search}`, { cache: 'no-store' })
+        if (!res.ok) throw new Error(`Failed to load best sellers (${res.status})`)
+
+        const json = await res.json()
+        return (json.data as ApiProduct[]).map(mapToProductType)
     },
 }

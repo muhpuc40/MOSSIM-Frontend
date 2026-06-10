@@ -253,108 +253,82 @@
         }
     }
 
-    .modal-cart-main {
-        width: 980px;
+  
+.modal-cart-main {
+    width: 880px;   // Wider to accommodate larger size and color columns
 
-        .list-product {
-            max-height: calc(100% - 210px - 180px);
-        }
+    // Full-height flex column
+    .cart-block {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
 
-        .tab-item {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: var(--white);
-            opacity: 0;
-            visibility: hidden;
-            transition: all ease 0.4s;
-            transform: translateY(100%);
-            box-shadow: 0px 5px 18px 5px rgba(64, 72, 87, 0.15);
+    // Scrollable item area
+    .list-product {
+        flex: 1 1 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
 
-            &.active {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-            }
-        }
+        scrollbar-width: thin;
+        scrollbar-color: #d1d5db transparent;
+        &::-webkit-scrollbar { width: 4px; }
+        &::-webkit-scrollbar-track { background: transparent; }
+        &::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+    }
 
-        @media (max-width: 1023.98px) {
-            width: 720px;
+    // Footer - directly attached, no gap
+    .footer-modal {
+        flex-shrink: 0;
+        position: relative;
+    }
 
-            .list-product {
-                max-height: calc(100% - 210px - 212px);
-            }
-        }
+    // Tab slide-up panels
+    .tab-item {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: var(--white);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(100%);
+        transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
+        box-shadow: 0 5px 18px 5px rgba(64, 72, 87, 0.15);
+        z-index: 2;
 
-        @media (max-width: 767.98px) {
-            width: 480px;
-
-            .list-product {
-                max-height: calc(100% - 210px - 125px);
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            width: unset;
-
-            .list-product {
-                max-height: calc(100% - 210px - 165px);
-            }
+        &.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
     }
 
-    .modal-cart-main {
-        width: 980px;
-
-        .list-product {
-            max-height: calc(100% - 210px - 180px);
-        }
-
-        .tab-item {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: var(--white);
-            opacity: 0;
-            visibility: hidden;
-            transition: all ease 0.4s;
-            transform: translateY(100%);
-            box-shadow: 0px 5px 18px 5px rgba(64, 72, 87, 0.15);
-
-            &.active {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 1023.98px) {
-            width: 720px;
-
-            .list-product {
-                max-height: calc(100% - 210px - 212px);
-            }
-        }
-
-        @media (max-width: 767.98px) {
-            width: 480px;
-
-            .list-product {
-                max-height: calc(100% - 210px - 125px);
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            width: unset;
-
-            .list-product {
-                max-height: calc(100% - 210px - 165px);
-            }
-        }
+    // Remove extra gap in subtotal section
+    .flex.items-center.justify-between {
+        margin-bottom: 0;
+        padding-bottom: 0;
     }
 
+    .block-button {
+        padding-top: 0.75rem;
+    }
+
+    @media (max-width: 1023.98px) {
+        width: 720px;
+    }
+
+    @media (max-width: 767.98px) {
+        width: 480px;
+    }
+
+    @media (max-width: 575.98px) {
+        width: calc(100vw - 40px);
+        left: 20px;
+        right: auto;
+    }
+}
     .modal-search-main {
         position: absolute;
         width: calc((1290px / 6) * 5);

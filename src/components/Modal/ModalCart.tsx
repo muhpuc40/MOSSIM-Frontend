@@ -104,10 +104,11 @@ const ModalCart = () => {
                   Checkout
                 </Link>
               </div>
+             
               <div
                 onClick={closeModalCart}
                 className="text-button-uppercase text-center has-line-before cursor-pointer inline-block self-center">
-                Continue shopping
+                or Continue shopping
               </div>
             </div>
 

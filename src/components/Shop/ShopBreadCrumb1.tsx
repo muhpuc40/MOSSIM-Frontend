@@ -1,508 +1,525 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import Link from "next/link";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
-import { ProductType } from '@/type/ProductType'
-import Product from '../Product/Product';
-import Slider from 'rc-slider';
-import 'rc-slider/assets/index.css'
-import HandlePagination from '../Other/HandlePagination';
+import Product from "@/components/Product/Product";
+import HandlePagination from "@/components/Other/HandlePagination";
+import { ProductType } from "@/type/ProductType";
+import { ApiProduct, mapToProductType } from "@/services/products";
+import Slider from "rc-slider";
+import "rc-slider/assets/index.css";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+interface ShopColor {
+  name: string;
+  hex: string | null;
+}
+interface ShopData {
+  types: { name: string; count: number }[];
+  categories: { name: string; count: number }[];
+  colors: ShopColor[];
+  sizes: string[];
+  price_range: { min: number; max: number };
+}
+interface PaginationMeta {
+  current_page: number;
+  last_page: number;
+  total: number;
+  per_page: number;
+}
 
 interface Props {
-    data: Array<ProductType>
-    productPerPage: number
-    dataType: string | null | undefined
-    gender: string | null
-    category: string | null
+  productPerPage: number;
+  dataType?: string | null;
+  gender?: string | null;
+  category?: string | null;
 }
 
-const ShopBreadCrumb1: React.FC<Props> = ({ data, productPerPage, dataType, gender, category }) => {
-    const [showOnlySale, setShowOnlySale] = useState(false)
-    const [sortOption, setSortOption] = useState('');
-    const [type, setType] = useState<string | null | undefined>(dataType)
-    const [size, setSize] = useState<string | null>()
-    const [color, setColor] = useState<string | null>()
-    const [brand, setBrand] = useState<string | null>()
-    const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 100 });
-    const [currentPage, setCurrentPage] = useState(0);
-    const productsPerPage = productPerPage;
-    const offset = currentPage * productsPerPage;
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
 
-    const handleShowOnlySale = () => {
-        setShowOnlySale(toggleSelect => !toggleSelect)
-    }
+const ShopBreadCrumb1: React.FC<Props> = ({
+  productPerPage,
+  dataType: initType,
+  category: initCategory,
+}) => {
+  /* ── Filter state — initialised directly from props ── */
+  const [type, setType] = useState<string | null>(initType ?? null);
+  const [category, setCategory] = useState<string | null>(initCategory ?? null);
+  const [size, setSize] = useState<string | null>(null);
+  const [color, setColor] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState("");
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({
+    min: 0,
+    max: 10000,
+  });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [layoutCol, setLayoutCol] = useState(3);
 
-    const handleSortChange = (option: string) => {
-        setSortOption(option);
-        setCurrentPage(0);
-    };
+  const debouncedPrice = useDebounce(priceRange, 400);
 
-    const handleType = (type: string | null) => {
-        setType((prevType) => (prevType === type ? null : type))
-        setCurrentPage(0);
-    }
+  /* ── Data state ──────────────────────────────────── */
+  const [shopData, setShopData] = useState<ShopData | null>(null);
+  const [products, setProducts] = useState<ProductType[]>([]);
+  const [pageMeta, setPageMeta] = useState<PaginationMeta | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [filtersLoading, setFiltersLoading] = useState(true);
 
-    const handleSize = (size: string) => {
-        setSize((prevSize) => (prevSize === size ? null : size))
-        setCurrentPage(0);
-    }
+  const abortRef = useRef<AbortController | null>(null);
 
-    const handlePriceChange = (values: number | number[]) => {
-        if (Array.isArray(values)) {
-            setPriceRange({ min: values[0], max: values[1] });
-            setCurrentPage(0);
-        }
-    };
+  /* ── KEY FIX: sync URL param changes back to state ── 
+       This handles navigating from /shop?type=man → /shop?category=Accessories
+       without a full page reload (Next.js soft navigation)               */
+  useEffect(() => {
+    setType(initType ?? null);
+    setCurrentPage(0);
+  }, [initType]);
 
-    const handleColor = (color: string) => {
-        setColor((prevColor) => (prevColor === color ? null : color))
-        setCurrentPage(0);
-    }
+  useEffect(() => {
+    setCategory(initCategory ?? null);
+    setCurrentPage(0);
+  }, [initCategory]);
 
-    const handleBrand = (brand: string) => {
-        setBrand((prevBrand) => (prevBrand === brand ? null : brand));
-        setCurrentPage(0);
-    }
+  /* ── Fetch shop-data once ────────────────────────── */
+  useEffect(() => {
+    setFiltersLoading(true);
+    fetch(`${API_URL}/products/shop-data`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (!json.success) return;
+        setShopData(json.data);
+        setPriceRange({
+          min: Math.floor(json.data.price_range.min),
+          max: Math.ceil(json.data.price_range.max),
+        });
+      })
+      .catch((err) => console.error("shop-data:", err))
+      .finally(() => setFiltersLoading(false));
+  }, []);
 
+  /* ── Fetch products whenever ANY filter changes ───── */
+  useEffect(() => {
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    setLoading(true);
 
-    // Filter product
-    let filteredData = data.filter(product => {
-        let isShowOnlySaleMatched = true;
-        if (showOnlySale) {
-            isShowOnlySaleMatched = product.sale
-        }
+    const params = new URLSearchParams();
+    params.set("per_page", String(productPerPage));
+    params.set("page", String(currentPage + 1));
+    if (type) params.set("type", type);
+    if (category) params.set("category", category);
+    if (color) params.set("color", color);
+    if (size) params.set("size", size);
+    if (debouncedPrice.min > 0)
+      params.set("min_price", String(debouncedPrice.min));
+    if (shopData && debouncedPrice.max < Math.ceil(shopData.price_range.max))
+      params.set("max_price", String(debouncedPrice.max));
+    if (sortOption === "priceLowToHigh") params.set("sort", "price_asc");
+    if (sortOption === "priceHighToLow") params.set("sort", "price_desc");
+    if (sortOption === "discountHighToLow") params.set("sort", "discount_desc");
 
-        let isDatagenderMatched = true;
-        if (gender) {
-            isDatagenderMatched = product.gender === gender
-        }
+    fetch(`${API_URL}/products?${params}`, { signal: abortRef.current.signal })
+      .then((r) => r.json())
+      .then((json) => {
+        setProducts((json.data as ApiProduct[]).map(mapToProductType));
+        if (json.meta) setPageMeta(json.meta);
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") console.error("products:", err);
+      })
+      .finally(() => setLoading(false));
 
-        let isDataCategoryMatched = true;
-        if (category) {
-            isDataCategoryMatched = product.category === category
-        }
+    return () => abortRef.current?.abort();
+  }, [
+    type,
+    category,
+    color,
+    size,
+    debouncedPrice,
+    sortOption,
+    currentPage,
+    productPerPage,
+    shopData,
+  ]);
 
-        let isDataTypeMatched = true;
-        if (dataType) {
-            isDataTypeMatched = product.type === dataType
-        }
+  /* ── Handlers ─────────────────────────────────────── */
+  const handleType = useCallback((val: string) => {
+    setType((p) => (p === val ? null : val));
+    setCurrentPage(0);
+  }, []);
+  const handleCategory = useCallback((val: string) => {
+    setCategory((p) => (p === val ? null : val));
+    setCurrentPage(0);
+  }, []);
+  const handleSize = useCallback((val: string) => {
+    setSize((p) => (p === val ? null : val));
+    setCurrentPage(0);
+  }, []);
+  const handleColor = useCallback((val: string) => {
+    setColor((p) => (p === val ? null : val));
+    setCurrentPage(0);
+  }, []);
+  const handlePriceChange = useCallback((values: number | number[]) => {
+    if (Array.isArray(values))
+      setPriceRange({ min: values[0], max: values[1] });
+  }, []);
+  const handleClearAll = useCallback(() => {
+    setType(null);
+    setCategory(null);
+    setSize(null);
+    setColor(null);
+    setSortOption("");
+    if (shopData)
+      setPriceRange({
+        min: Math.floor(shopData.price_range.min),
+        max: Math.ceil(shopData.price_range.max),
+      });
+    setCurrentPage(0);
+  }, [shopData]);
 
-        let isTypeMatched = true;
-        if (type) {
-            dataType = type
-            isTypeMatched = product.type === type;
-        }
+  const pageCount = pageMeta?.last_page ?? 0;
+  const totalProducts = pageMeta?.total ?? 0;
+  const pageLabel = category ?? type ?? "Shop";
+  const activeFilters = [type, category, size, color].filter(Boolean);
 
-        let isSizeMatched = true;
-        if (size) {
-            isSizeMatched = product.sizes.includes(size)
-        }
-
-        let isPriceRangeMatched = true;
-        if (priceRange.min !== 0 || priceRange.max !== 100) {
-            isPriceRangeMatched = product.price >= priceRange.min && product.price <= priceRange.max;
-        }
-
-        let isColorMatched = true;
-        if (color) {
-            isColorMatched = product.variation.some(item => item.color === color)
-        }
-
-        let isBrandMatched = true;
-        if (brand) {
-            isBrandMatched = product.brand === brand;
-        }
-
-        return isShowOnlySaleMatched && isDatagenderMatched && isDataCategoryMatched && isDataTypeMatched && isTypeMatched && isSizeMatched && isColorMatched && isBrandMatched && isPriceRangeMatched
-    })
-
-
-    // Create a copy array filtered to sort
-    let sortedData = [...filteredData];
-
-    if (sortOption === 'soldQuantityHighToLow') {
-        filteredData = sortedData.sort((a, b) => b.sold - a.sold)
-    }
-
-    if (sortOption === 'discountHighToLow') {
-        filteredData = sortedData
-            .sort((a, b) => (
-                (Math.floor(100 - ((b.price / b.originPrice) * 100))) - (Math.floor(100 - ((a.price / a.originPrice) * 100)))
-            ))
-    }
-
-    if (sortOption === 'priceHighToLow') {
-        filteredData = sortedData.sort((a, b) => b.price - a.price)
-    }
-
-    if (sortOption === 'priceLowToHigh') {
-        filteredData = sortedData.sort((a, b) => a.price - b.price)
-    }
-
-    const totalProducts = filteredData.length
-    const selectedType = type
-    const selectedSize = size
-    const selectedColor = color
-    const selectedBrand = brand
-
-
-    if (filteredData.length === 0) {
-        filteredData = [{
-            id: 'no-data',
-            category: 'no-data',
-            type: 'no-data',
-            name: 'no-data',
-            gender: 'no-data',
-            new: false,
-            sale: false,
-            rate: 0,
-            price: 0,
-            originPrice: 0,
-            brand: 'no-data',
-            sold: 0,
-            quantity: 0,
-            quantityPurchase: 0,
-            sizes: [],
-            variation: [],
-            thumbImage: [],
-            images: [],
-            description: 'no-data',
-            action: 'no-data',
-            slug: 'no-data'
-        }];
-    }
-
-
-    // Find page number base on filteredData
-    const pageCount = Math.ceil(filteredData.length / productsPerPage);
-
-    // If page number 0, set current page = 0
-    if (pageCount === 0) {
-        setCurrentPage(0);
-    }
-
-    // Get product data for current page
-    let currentProducts: ProductType[];
-
-    if (filteredData.length > 0) {
-        currentProducts = filteredData.slice(offset, offset + productsPerPage);
-    } else {
-        currentProducts = []
-    }
-
-    const handlePageChange = (selected: number) => {
-        setCurrentPage(selected);
-    };
-
-    const handleClearAll = () => {
-        dataType = null
-        setShowOnlySale(false);
-        setSortOption('');
-        setType(null);
-        setSize(null);
-        setColor(null);
-        setBrand(null);
-        setPriceRange({ min: 0, max: 100 });
-        setCurrentPage(0);
-        handleType(null)
-    };
-
-    return (
-        <>
-            <div className="breadcrumb-block style-img">
-                <div className="breadcrumb-main bg-linear overflow-hidden">
-                    <div className="container lg:pt-[134px] pt-24 pb-10 relative">
-                        <div className="main-content w-full h-full flex flex-col items-center justify-center relative z-[1]">
-                            <div className="text-content">
-                                <div className="heading2 text-center">{dataType === null ? 'Shop' : dataType}</div>
-                                <div className="link flex items-center justify-center gap-1 caption1 mt-3">
-                                    <Link href={'/'}>Homepage</Link>
-                                    <Icon.CaretRight size={14} className='text-secondary2' />
-                                    <div className='text-secondary2 capitalize'>{dataType === null ? 'Shop' : dataType}</div>
-                                </div>
-                            </div>
-                            <div className="list-tab flex flex-wrap items-center justify-center gap-y-5 gap-8 lg:mt-[70px] mt-12 overflow-hidden">
-                                {['t-shirt', 'dress', 'top', 'swimwear', 'shirt'].map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className={`tab-item text-button-uppercase cursor-pointer has-line-before line-2px ${dataType === item ? 'active' : ''}`}
-                                        onClick={() => handleType(item)}
-                                    >
-                                        {item}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+  return (
+    <>
+      {/* ── Breadcrumb header ──────────────────────── */}
+      <div className="breadcrumb-block style-img">
+        <div className="breadcrumb-main bg-linear overflow-hidden">
+          <div className="container lg:pt-[134px] pt-24 pb-10 relative">
+            <div className="main-content w-full h-full flex flex-col items-center justify-center relative z-[1]">
+              <div className="text-content">
+                <div className="heading2 text-center capitalize">
+                  {pageLabel}
                 </div>
+                <div className="link flex items-center justify-center gap-1 caption1 mt-3">
+                  <Link href="/">Homepage</Link>
+                  <Icon.CaretRight size={14} className="text-secondary2" />
+                  <div className="text-secondary2 capitalize">{pageLabel}</div>
+                </div>
+              </div>
+              <div className="list-tab flex flex-wrap items-center justify-center gap-y-5 gap-8 lg:mt-[70px] mt-12">
+                {["man", "women", "kids", "unisex"].map((item) => (
+                  <div
+                    key={item}
+                    className={`tab-item text-button-uppercase cursor-pointer has-line-before line-2px ${type === item ? "active" : ""}`}
+                    onClick={() => handleType(item)}>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="shop-product breadcrumb1 lg:py-20 md:py-14 py-10">
+        <div className="container">
+          <div className="flex max-md:flex-wrap max-md:flex-col-reverse gap-y-8">
+            {/* ── Sidebar ────────────────────────────── */}
+            <div className="sidebar lg:w-1/4 md:w-1/3 w-full md:pr-12">
+              {/* Category */}
+              <div className="filter-type pb-8 border-b border-line">
+                <div className="heading6">Category</div>
+                <div className="list-type mt-4">
+                  {filtersLoading
+                    ? Array.from({ length: 6 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-5 bg-surface rounded animate-pulse mb-3"
+                        />
+                      ))
+                    : shopData?.categories.map((cat) => (
+                        <div
+                          key={cat.name}
+                          className={`item flex items-center justify-between cursor-pointer ${category === cat.name ? "active" : ""}`}
+                          onClick={() => handleCategory(cat.name)}>
+                          <div className="text-secondary has-line-before hover:text-black capitalize py-1">
+                            {cat.name}
+                          </div>
+                          <div className="text-secondary2 caption1">
+                            ({cat.count})
+                          </div>
+                        </div>
+                      ))}
+                </div>
+              </div>
+
+              {/* Size */}
+              <div className="filter-size pb-8 border-b border-line mt-8">
+                <div className="heading6">Size</div>
+                <div className="list-size flex items-center flex-wrap gap-3 gap-y-3 mt-4">
+                  {filtersLoading
+                    ? Array.from({ length: 6 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-12 h-10 bg-surface rounded-full animate-pulse"
+                        />
+                      ))
+                    : shopData?.sizes.map((item) => (
+                        <div
+                          key={item}
+                          className={`size-item text-button px-4 py-2 flex items-center justify-center rounded-full border border-line cursor-pointer ${size === item ? "active" : ""}`}
+                          onClick={() => handleSize(item)}>
+                          {item}
+                        </div>
+                      ))}
+                </div>
+              </div>
+
+              {/* Price */}
+              <div className="filter-price pb-8 border-b border-line mt-8">
+                <div className="heading6">Price Range</div>
+                {shopData && (
+                  <Slider
+                    range
+                    min={Math.floor(shopData.price_range.min)}
+                    max={Math.ceil(shopData.price_range.max)}
+                    value={[priceRange.min, priceRange.max]}
+                    onChange={handlePriceChange}
+                    className="mt-5"
+                  />
+                )}
+                <div className="price-block flex items-center justify-between flex-wrap mt-4">
+                  <div className="min flex items-center gap-1">
+                    <div className="caption1">Min:</div>
+                    <div className="price-min caption1 font-semibold">
+                      ৳{priceRange.min.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="max flex items-center gap-1">
+                    <div className="caption1">Max:</div>
+                    <div className="price-max caption1 font-semibold">
+                      ৳{priceRange.max.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Colors */}
+              <div className="filter-color pb-8 border-b border-line mt-8">
+                <div className="heading6">Colors</div>
+                <div className="list-color flex items-center flex-wrap gap-3 gap-y-4 mt-4">
+                  {filtersLoading
+                    ? Array.from({ length: 8 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-8 h-8 rounded-full bg-surface animate-pulse"
+                        />
+                      ))
+                    : shopData?.colors.map((c) =>
+                        c.hex ? (
+                          <div
+                            key={c.name}
+                            title={c.name}
+                            className={`color-item w-8 h-8 rounded-full cursor-pointer border-2 duration-300 ${color === c.name ? "border-black scale-110" : "border-transparent hover:border-black"}`}
+                            style={{ backgroundColor: c.hex }}
+                            onClick={() => handleColor(c.name)}>
+                            <div className="tag-action bg-black text-white caption2 capitalize px-1.5 py-0.5 rounded-sm whitespace-nowrap">
+                              {c.name}
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            key={c.name}
+                            className={`color-item px-3 py-[5px] flex items-center justify-center rounded-full border cursor-pointer caption2 duration-300 ${color === c.name ? "bg-black text-white border-black" : "border-line hover:border-black"}`}
+                            onClick={() => handleColor(c.name)}>
+                            {c.name}
+                          </div>
+                        ),
+                      )}
+                </div>
+              </div>
+
+              {/* Clear */}
+              {activeFilters.length > 0 && (
+                <div
+                  className="clear-btn flex items-center justify-center px-4 py-2 gap-1 mt-6 rounded-full border border-red cursor-pointer"
+                  onClick={handleClearAll}>
+                  <Icon.X color="rgb(219, 68, 68)" size={14} />
+                  <span className="text-button-uppercase text-red">
+                    Clear All
+                  </span>
+                </div>
+              )}
             </div>
 
-            <div className="shop-product breadcrumb1 lg:py-20 md:py-14 py-10">
-                <div className="container">
-                    <div className="flex max-md:flex-wrap max-md:flex-col-reverse gap-y-8">
-                        <div className="sidebar lg:w-1/4 md:w-1/3 w-full md:pr-12">
-                            <div className="filter-type pb-8 border-b border-line">
-                                <div className="heading6">Products Type</div>
-                                <div className="list-type mt-4">
-                                    {['t-shirt', 'dress', 'top', 'swimwear', 'shirt', 'underwear', 'sets', 'accessories'].map((item, index) => (
-                                        <div
-                                            key={index}
-                                            className={`item flex items-center justify-between cursor-pointer ${dataType === item ? 'active' : ''}`}
-                                            onClick={() => handleType(item)}
-                                        >
-                                            <div className='text-secondary has-line-before hover:text-black capitalize'>{item}</div>
-                                            <div className='text-secondary2'>
-                                                ({data.filter(dataItem => dataItem.type === item && dataItem.category === 'fashion').length})
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="filter-size pb-8 border-b border-line mt-8">
-                                <div className="heading6">Size</div>
-                                <div className="list-size flex items-center flex-wrap gap-3 gap-y-4 mt-4">
-                                    {
-                                        ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'].map((item, index) => (
-                                            <div
-                                                key={index}
-                                                className={`size-item text-button w-[44px] h-[44px] flex items-center justify-center rounded-full border border-line ${size === item ? 'active' : ''}`}
-                                                onClick={() => handleSize(item)}
-                                            >
-                                                {item}
-                                            </div>
-                                        ))
-                                    }
-                                    <div
-                                        className={`size-item text-button px-4 py-2 flex items-center justify-center rounded-full border border-line ${size === 'freesize' ? 'active' : ''}`}
-                                        onClick={() => handleSize('freesize')}
-                                    >
-                                        Freesize
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="filter-price pb-8 border-b border-line mt-8">
-                                <div className="heading6">Price Range</div>
-                                <Slider
-                                    range
-                                    defaultValue={[0, 100]}
-                                    min={0}
-                                    max={100}
-                                    onChange={handlePriceChange}
-                                    className='mt-5'
-                                />
-                                <div className="price-block flex items-center justify-between flex-wrap mt-4">
-                                    <div className="min flex items-center gap-1">
-                                        <div>Min price:</div>
-                                        <div className='price-min'>$
-                                            <span>{priceRange.min}</span>
-                                        </div>
-                                    </div>
-                                    <div className="min flex items-center gap-1">
-                                        <div>Max price:</div>
-                                        <div className='price-max'>$
-                                            <span>{priceRange.max}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="filter-color pb-8 border-b border-line mt-8">
-                                <div className="heading6">colors</div>
-                                <div className="list-color flex items-center flex-wrap gap-3 gap-y-4 mt-4">
-                                    <div
-                                        className={`color-item px-3 py-[5px] flex items-center justify-center gap-2 rounded-full border border-line ${color === 'pink' ? 'active' : ''}`}
-                                        onClick={() => handleColor('pink')}
-                                    >
-                                        <div className="color bg-[#F4C5BF] w-5 h-5 rounded-full"></div>
-                                        <div className="caption1 capitalize">pink</div>
-                                    </div>
-                                    <div
-                                        className={`color-item px-3 py-[5px] flex items-center justify-center gap-2 rounded-full border border-line ${color === 'red' ? 'active' : ''}`}
-                                        onClick={() => handleColor('red')}
-                                    >
-                                        <div className="color bg-red w-5 h-5 rounded-full"></div>
-                                        <div className="caption1 capitalize">red</div>
-                                    </div>
-                                    <div
-                                        className={`color-item px-3 py-[5px] flex items-center justify-center gap-2 rounded-full border border-line ${color === 'green' ? 'active' : ''}`}
-                                        onClick={() => handleColor('green')}
-                                    >
-                                        <div className="color bg-green w-5 h-5 rounded-full"></div>
-                                        <div className="caption1 capitalize">green</div>
-                                    </div>
-                                    <div
-                                        className={`color-item px-3 py-[5px] flex items-center justify-center gap-2 rounded-full border border-line ${color === 'yellow' ? 'active' : ''}`}
-                                        onClick={() => handleColor('yellow')}
-                                    >
-                                        <div className="color bg-yellow w-5 h-5 rounded-full"></div>
-                                        <div className="caption1 capitalize">yellow</div>
-                                    </div>
-                                    <div
-                                        className={`color-item px-3 py-[5px] flex items-center justify-center gap-2 rounded-full border border-line ${color === 'purple' ? 'active' : ''}`}
-                                        onClick={() => handleColor('purple')}
-                                    >
-                                        <div className="color bg-purple w-5 h-5 rounded-full"></div>
-                                        <div className="caption1 capitalize">purple</div>
-                                    </div>
-                                    <div
-                                        className={`color-item px-3 py-[5px] flex items-center justify-center gap-2 rounded-full border border-line ${color === 'black' ? 'active' : ''}`}
-                                        onClick={() => handleColor('black')}
-                                    >
-                                        <div className="color bg-black w-5 h-5 rounded-full"></div>
-                                        <div className="caption1 capitalize">black</div>
-                                    </div>
-                                    <div
-                                        className={`color-item px-3 py-[5px] flex items-center justify-center gap-2 rounded-full border border-line ${color === 'white' ? 'active' : ''}`}
-                                        onClick={() => handleColor('white')}
-                                    >
-                                        <div className="color bg-[#F6EFDD] w-5 h-5 rounded-full"></div>
-                                        <div className="caption1 capitalize">white</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="filter-brand mt-8">
-                                <div className="heading6">Brands</div>
-                                <div className="list-brand mt-4">
-                                    {['adidas', 'hermes', 'zara', 'nike', 'gucci'].map((item, index) => (
-                                        <div key={index} className="brand-item flex items-center justify-between">
-                                            <div className="left flex items-center cursor-pointer">
-                                                <div className="block-input">
-                                                    <input
-                                                        type="checkbox"
-                                                        name={item}
-                                                        id={item}
-                                                        checked={brand === item}
-                                                        onChange={() => handleBrand(item)} />
-                                                    <Icon.CheckSquare size={20} weight='fill' className='icon-checkbox' />
-                                                </div>
-                                                <label htmlFor={item} className="brand-name capitalize pl-2 cursor-pointer">{item}</label>
-                                            </div>
-                                            <div className='text-secondary2'>
-                                                ({data.filter(dataItem => dataItem.brand === item && dataItem.category === 'fashion').length})
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="list-product-block lg:w-3/4 md:w-2/3 w-full md:pl-3">
-                            <div className="filter-heading flex items-center justify-between gap-5 flex-wrap">
-                                <div className="left flex has-line items-center flex-wrap gap-5">
-                                    <div className="choose-layout flex items-center gap-2">
-                                        <div className="item three-col w-8 h-8 border border-line rounded flex items-center justify-center cursor-pointer active">
-                                            <div className='flex items-center gap-0.5'>
-                                                <span className='w-[3px] h-4 bg-secondary2 rounded-sm'></span>
-                                                <span className='w-[3px] h-4 bg-secondary2 rounded-sm'></span>
-                                                <span className='w-[3px] h-4 bg-secondary2 rounded-sm'></span>
-                                            </div>
-                                        </div>
-                                        <Link href={'/shop/sidebar-list'} className="item row w-8 h-8 border border-line rounded flex items-center justify-center cursor-pointer">
-                                            <div className='flex flex-col items-center gap-0.5'>
-                                                <span className='w-4 h-[3px] bg-secondary2 rounded-sm'></span>
-                                                <span className='w-4 h-[3px] bg-secondary2 rounded-sm'></span>
-                                                <span className='w-4 h-[3px] bg-secondary2 rounded-sm'></span>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                    <div className="check-sale flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            name="filterSale"
-                                            id="filter-sale"
-                                            className='border-line'
-                                            onChange={handleShowOnlySale}
-                                        />
-                                        <label htmlFor="filter-sale" className='cation1 cursor-pointer'>Show only products on sale</label>
-                                    </div>
-                                </div>
-                                <div className="right flex items-center gap-3">
-                                    <div className="select-block relative">
-                                        <select
-                                            id="select-filter"
-                                            name="select-filter"
-                                            className='caption1 py-2 pl-3 md:pr-20 pr-10 rounded-lg border border-line'
-                                            onChange={(e) => { handleSortChange(e.target.value) }}
-                                            defaultValue={'Sorting'}
-                                        >
-                                            <option value="Sorting" disabled>Sorting</option>
-                                            <option value="soldQuantityHighToLow">Best Selling</option>
-                                            <option value="discountHighToLow">Best Discount</option>
-                                            <option value="priceHighToLow">Price High To Low</option>
-                                            <option value="priceLowToHigh">Price Low To High</option>
-                                        </select>
-                                        <Icon.CaretDown size={12} className='absolute top-1/2 -translate-y-1/2 md:right-4 right-2' />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="list-filtered flex items-center gap-3 mt-4">
-                                <div className="total-product">
-                                    {totalProducts}
-                                    <span className='text-secondary pl-1'>Products Found</span>
-                                </div>
-                                {
-                                    (selectedType || selectedSize || selectedColor || selectedBrand) && (
-                                        <>
-                                            <div className="list flex items-center gap-3">
-                                                <div className='w-px h-4 bg-line'></div>
-                                                {selectedType && (
-                                                    <div className="item flex items-center px-2 py-1 gap-1 bg-linear rounded-full capitalize" onClick={() => { setType(null) }}>
-                                                        <Icon.X className='cursor-pointer' />
-                                                        <span>{selectedType}</span>
-                                                    </div>
-                                                )}
-                                                {selectedSize && (
-                                                    <div className="item flex items-center px-2 py-1 gap-1 bg-linear rounded-full capitalize" onClick={() => { setSize(null) }}>
-                                                        <Icon.X className='cursor-pointer' />
-                                                        <span>{selectedSize}</span>
-                                                    </div>
-                                                )}
-                                                {selectedColor && (
-                                                    <div className="item flex items-center px-2 py-1 gap-1 bg-linear rounded-full capitalize" onClick={() => { setColor(null) }}>
-                                                        <Icon.X className='cursor-pointer' />
-                                                        <span>{selectedColor}</span>
-                                                    </div>
-                                                )}
-                                                {selectedBrand && (
-                                                    <div className="item flex items-center px-2 py-1 gap-1 bg-linear rounded-full capitalize" onClick={() => { setBrand(null) }}>
-                                                        <Icon.X className='cursor-pointer' />
-                                                        <span>{selectedBrand}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div
-                                                className="clear-btn flex items-center px-2 py-1 gap-1 rounded-full border border-red cursor-pointer"
-                                                onClick={handleClearAll}
-                                            >
-                                                <Icon.X color='rgb(219, 68, 68)' className='cursor-pointer' />
-                                                <span className='text-button-uppercase text-red'>Clear All</span>
-                                            </div>
-                                        </>
-                                    )
-                                }
-                            </div>
-
-                            <div className="list-product hide-product-sold grid lg:grid-cols-3 grid-cols-2 sm:gap-[30px] gap-[20px] mt-7">
-                                {currentProducts.map((item) => (
-                                    item.id === 'no-data' ? (
-                                        <div key={item.id} className="no-data-product">No products match the selected criteria.</div>
-                                    ) : (
-                                        <Product key={item.id} data={item} type='grid' />
-                                    )
-                                ))}
-                            </div>
-
-                            {pageCount > 1 && (
-                                <div className="list-pagination flex items-center md:mt-10 mt-7">
-                                    <HandlePagination pageCount={pageCount} onPageChange={handlePageChange} />
-                                </div>
-                            )}
-                        </div>
+            {/* ── Products ───────────────────────────── */}
+            <div className="list-product-block lg:w-3/4 md:w-2/3 w-full md:pl-3">
+              {/* Toolbar */}
+              <div className="filter-heading flex items-center justify-between gap-5 flex-wrap">
+                <div className="left flex has-line items-center flex-wrap gap-5">
+                  <div className="choose-layout flex items-center gap-2">
+                    <div
+                      className={`item three-col w-8 h-8 border border-line rounded flex items-center justify-center cursor-pointer ${layoutCol === 3 ? "active" : ""}`}
+                      onClick={() => setLayoutCol(3)}>
+                      <div className="flex items-center gap-0.5">
+                        <span className="w-[3px] h-4 bg-secondary2 rounded-sm" />
+                        <span className="w-[3px] h-4 bg-secondary2 rounded-sm" />
+                        <span className="w-[3px] h-4 bg-secondary2 rounded-sm" />
+                      </div>
                     </div>
+                    <div
+                      className={`item row w-8 h-8 border border-line rounded flex items-center justify-center cursor-pointer ${layoutCol === 1 ? "active" : ""}`}
+                      onClick={() => setLayoutCol(1)}>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="w-4 h-[3px] bg-secondary2 rounded-sm" />
+                        <span className="w-4 h-[3px] bg-secondary2 rounded-sm" />
+                        <span className="w-4 h-[3px] bg-secondary2 rounded-sm" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-            </div >
-        </>
-    )
-}
+                <div className="right flex items-center gap-3">
+                  <div className="total-product caption1">
+                    {loading ? "..." : totalProducts}
+                    <span className="text-secondary pl-1">Products Found</span>
+                  </div>
+                  <div className="select-block relative">
+                    <select
+                      className="caption1 py-2 pl-3 md:pr-20 pr-10 rounded-lg border border-line"
+                      value={sortOption}
+                      onChange={(e) => {
+                        setSortOption(e.target.value);
+                        setCurrentPage(0);
+                      }}>
+                      <option value="">Default</option>
+                      <option value="discountHighToLow">Best Discount</option>
+                      <option value="priceHighToLow">Price High To Low</option>
+                      <option value="priceLowToHigh">Price Low To High</option>
+                    </select>
+                    <Icon.CaretDown
+                      size={12}
+                      className="absolute top-1/2 -translate-y-1/2 md:right-4 right-2"
+                    />
+                  </div>
+                </div>
+              </div>
 
-export default ShopBreadCrumb1
+              {/* Active filter chips */}
+              {activeFilters.length > 0 && (
+                <div className="list-filtered flex items-center gap-3 mt-4 flex-wrap">
+                  <div className="w-px h-4 bg-line" />
+                  {type && (
+                    <div
+                      className="item flex items-center px-2 py-1 gap-1 bg-linear rounded-full capitalize cursor-pointer"
+                      onClick={() => {
+                        setType(null);
+                        setCurrentPage(0);
+                      }}>
+                      <Icon.X size={12} />
+                      <span className="caption1">{type}</span>
+                    </div>
+                  )}
+                  {category && (
+                    <div
+                      className="item flex items-center px-2 py-1 gap-1 bg-linear rounded-full capitalize cursor-pointer"
+                      onClick={() => {
+                        setCategory(null);
+                        setCurrentPage(0);
+                      }}>
+                      <Icon.X size={12} />
+                      <span className="caption1">{category}</span>
+                    </div>
+                  )}
+                  {size && (
+                    <div
+                      className="item flex items-center px-2 py-1 gap-1 bg-linear rounded-full capitalize cursor-pointer"
+                      onClick={() => {
+                        setSize(null);
+                        setCurrentPage(0);
+                      }}>
+                      <Icon.X size={12} />
+                      <span className="caption1">Size: {size}</span>
+                    </div>
+                  )}
+                  {color && (
+                    <div
+                      className="item flex items-center px-2 py-1 gap-1 bg-linear rounded-full capitalize cursor-pointer"
+                      onClick={() => {
+                        setColor(null);
+                        setCurrentPage(0);
+                      }}>
+                      <Icon.X size={12} />
+                      <span className="caption1">{color}</span>
+                    </div>
+                  )}
+                  <div
+                    className="clear-btn flex items-center px-2 py-1 gap-1 rounded-full border border-red cursor-pointer"
+                    onClick={handleClearAll}>
+                    <Icon.X color="rgb(219, 68, 68)" size={12} />
+                    <span className="text-button-uppercase text-red caption2">
+                      Clear All
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Grid */}
+              {loading ? (
+                <div
+                  className={`list-product hide-product-sold grid ${layoutCol === 3 ? "lg:grid-cols-3 sm:grid-cols-2 grid-cols-2" : "grid-cols-1"} sm:gap-[30px] gap-[20px] mt-7`}>
+                  {Array.from({ length: productPerPage }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="aspect-[3/4] bg-surface rounded-2xl animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : products.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="heading5 mb-2">No products found</div>
+                  <div className="caption1 text-secondary">
+                    Try adjusting or clearing your filters
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className={`list-product hide-product-sold grid ${layoutCol === 3 ? "lg:grid-cols-3 sm:grid-cols-2 grid-cols-2" : "grid-cols-1"} sm:gap-[30px] gap-[20px] mt-7`}>
+                  {products.map((item) => (
+                    <Product
+                      key={item.id}
+                      data={item}
+                      type={layoutCol === 3 ? "grid" : "list"}
+                      style="style-1"
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {pageCount > 1 && (
+                <div className="list-pagination flex items-center md:mt-10 mt-7">
+                  <HandlePagination
+                    pageCount={pageCount}
+                    onPageChange={(page: number) => {
+                      setCurrentPage(page);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default ShopBreadCrumb1;

@@ -32,7 +32,7 @@ const Collection = () => {
     }, [])
 
     const handleCategoryClick = (categoryName: string) => {
-        router.push(`/shop/breadcrumb1?category=${encodeURIComponent(categoryName)}`)
+        router.push(`/shop?category=${encodeURIComponent(categoryName)}`)
     }
 
     // Loading skeleton

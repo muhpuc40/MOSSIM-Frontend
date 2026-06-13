@@ -85,7 +85,7 @@ const ModalCart = () => {
             {/* Subtotal - directly attached, no extra padding */}
             <div className="flex items-center justify-between px-6 pt-4">
               <div className="heading5">Subtotal</div>
-              <div className="heading5">${totalCart.toFixed(2)}</div>
+              <div className="heading5">BDT {totalCart.toFixed(2)}</div>
             </div>
 
             {/* CTA Buttons */}
@@ -262,7 +262,7 @@ const CartItem = ({ product, onRemove, onUpdate }: CartItemProps) => {
           <div className="text-button line-clamp-2 leading-snug">
             {product.name}
           </div>
-          <div className="text-title font-semibold">${product.price}.00</div>
+          <div className="text-title font-semibold">BDT {product.price}</div>
         </div>
 
         {/* Colors */}
@@ -365,7 +365,7 @@ const CartItem = ({ product, onRemove, onUpdate }: CartItemProps) => {
               Remove
             </button>
           </div>
-          <div className="text-title font-semibold">${product.price}.00</div>
+          <div className="text-title font-semibold">BDT {product.price}</div>
           {product.variation && product.variation.length > 0 && (
             <div>
               <p className="caption2 text-secondary mb-1">

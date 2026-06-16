@@ -11,6 +11,7 @@ import { useModalWishlistContext } from '@/context/ModalWishlistContext'
 import { useCompare } from '@/context/CompareContext'
 import { useModalCompareContext } from '@/context/ModalCompareContext'
 import ModalSizeguide from './ModalSizeguide'
+import Link from 'next/link'
 import { getProductVariants, getDefaultVariant } from '@/services/products'
 
 const ModalQuickview = () => {
@@ -274,7 +275,7 @@ const ModalQuickview = () => {
                                     </div>
 
                                     <div className="button-block mt-5">
-                                        <div className="button-main w-full text-center">Buy It Now</div>
+                                        <Link href="/checkout" className="button-main w-full text-center">Buy It Now</Link>
                                     </div>
 
                                     <div className="flex items-center flex-wrap lg:gap-20 gap-8 gap-y-4 mt-5">

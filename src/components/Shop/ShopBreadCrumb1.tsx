@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import Product from "@/components/Product/Product";
@@ -41,6 +35,9 @@ interface Props {
   dataType?: string | null;
   gender?: string | null;
   category?: string | null;
+  initialProducts?: ApiProduct[];
+  initialMeta?: PaginationMeta | null;
+  initialShopData?: ShopData | null;
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -56,65 +53,55 @@ const ShopBreadCrumb1: React.FC<Props> = ({
   productPerPage,
   dataType: initType,
   category: initCategory,
+  initialProducts,
+  initialMeta,
+  initialShopData,
 }) => {
-  /* ── Filter state — initialised directly from props ── */
+  /* ── Filter state ── */
   const [type, setType] = useState<string | null>(initType ?? null);
   const [category, setCategory] = useState<string | null>(initCategory ?? null);
   const [size, setSize] = useState<string | null>(null);
   const [color, setColor] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState("");
-  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({
-    min: 0,
-    max: 10000,
-  });
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>(
+    initialShopData
+      ? {
+          min: Math.floor(initialShopData.price_range.min),
+          max: Math.ceil(initialShopData.price_range.max),
+        }
+      : { min: 0, max: 10000 }
+  );
   const [currentPage, setCurrentPage] = useState(0);
   const [layoutCol, setLayoutCol] = useState(3);
 
   const debouncedPrice = useDebounce(priceRange, 400);
 
-  /* ── Data state ──────────────────────────────────── */
-  const [shopData, setShopData] = useState<ShopData | null>(null);
-  const [products, setProducts] = useState<ProductType[]>([]);
-  const [pageMeta, setPageMeta] = useState<PaginationMeta | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [filtersLoading, setFiltersLoading] = useState(true);
+  /* ── Data state — pre-filled from server, so NO loading on first paint ── */
+  const [shopData] = useState<ShopData | null>(initialShopData ?? null);
+  const [products, setProducts] = useState<ProductType[]>(
+    initialProducts ? initialProducts.map(mapToProductType) : []
+  );
+  const [pageMeta, setPageMeta] = useState<PaginationMeta | null>(
+    initialMeta ?? null
+  );
+  const [loading, setLoading] = useState(false);
+  const filtersLoading = !initialShopData;
 
   const abortRef = useRef<AbortController | null>(null);
+  const isFirstRun = useRef(true);
 
-  /* ── KEY FIX: sync URL param changes back to state ── 
-       This handles navigating from /shop?type=man → /shop?category=Accessories
-       without a full page reload (Next.js soft navigation)               */
+  /* ── Re-fetch products ONLY when a filter actually changes ──
+       Skips the very first run because the server already gave us page 1.  */
   useEffect(() => {
-    setType(initType ?? null);
-    setCurrentPage(0);
-  }, [initType]);
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
 
-  useEffect(() => {
-    setCategory(initCategory ?? null);
-    setCurrentPage(0);
-  }, [initCategory]);
-
-  /* ── Fetch shop-data once ────────────────────────── */
-  useEffect(() => {
-    setFiltersLoading(true);
-    fetch(`${API_URL}/products/shop-data`)
-      .then((r) => r.json())
-      .then((json) => {
-        if (!json.success) return;
-        setShopData(json.data);
-        setPriceRange({
-          min: Math.floor(json.data.price_range.min),
-          max: Math.ceil(json.data.price_range.max),
-        });
-      })
-      .catch((err) => console.error("shop-data:", err))
-      .finally(() => setFiltersLoading(false));
-  }, []);
-
-  /* ── Fetch products whenever ANY filter changes ───── */
-  useEffect(() => {
     abortRef.current?.abort();
-    abortRef.current = new AbortController();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
 
     const params = new URLSearchParams();
@@ -132,18 +119,21 @@ const ShopBreadCrumb1: React.FC<Props> = ({
     if (sortOption === "priceHighToLow") params.set("sort", "price_desc");
     if (sortOption === "discountHighToLow") params.set("sort", "discount_desc");
 
-    fetch(`${API_URL}/products?${params}`, { signal: abortRef.current.signal })
+    fetch(`${API_URL}/products?${params}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((json) => {
+        if (controller.signal.aborted) return;
         setProducts((json.data as ApiProduct[]).map(mapToProductType));
         if (json.meta) setPageMeta(json.meta);
+        setLoading(false);
       })
       .catch((err) => {
-        if (err.name !== "AbortError") console.error("products:", err);
-      })
-      .finally(() => setLoading(false));
+        if (err.name === "AbortError") return;
+        console.error("products:", err);
+        setLoading(false);
+      });
 
-    return () => abortRef.current?.abort();
+    return () => controller.abort();
   }, [
     type,
     category,
@@ -156,7 +146,7 @@ const ShopBreadCrumb1: React.FC<Props> = ({
     shopData,
   ]);
 
-  /* ── Handlers ─────────────────────────────────────── */
+  /* ── Handlers ── */
   const handleType = useCallback((val: string) => {
     setType((p) => (p === val ? null : val));
     setCurrentPage(0);
@@ -196,9 +186,11 @@ const ShopBreadCrumb1: React.FC<Props> = ({
   const pageLabel = category ?? type ?? "Shop";
   const activeFilters = [type, category, size, color].filter(Boolean);
 
+  const gridClass = `list-product hide-product-sold grid ${layoutCol === 3 ? "lg:grid-cols-3 sm:grid-cols-2 grid-cols-2" : "grid-cols-1"} sm:gap-[30px] gap-[20px] mt-7`;
+
   return (
     <>
-      {/* ── Breadcrumb header ──────────────────────── */}
+      {/* ── Breadcrumb header ── */}
       <div className="breadcrumb-block style-img">
         <div className="breadcrumb-main bg-linear overflow-hidden">
           <div className="container lg:pt-[134px] pt-24 pb-10 relative">
@@ -231,7 +223,7 @@ const ShopBreadCrumb1: React.FC<Props> = ({
       <div className="shop-product breadcrumb1 lg:py-20 md:py-14 py-10">
         <div className="container">
           <div className="flex max-md:flex-wrap max-md:flex-col-reverse gap-y-8">
-            {/* ── Sidebar ────────────────────────────── */}
+            {/* ── Sidebar ── */}
             <div className="sidebar lg:w-1/4 md:w-1/3 w-full md:pr-12">
               {/* Category */}
               <div className="filter-type pb-8 border-b border-line">
@@ -322,10 +314,10 @@ const ShopBreadCrumb1: React.FC<Props> = ({
                           className="w-8 h-8 rounded-full bg-surface animate-pulse"
                         />
                       ))
-                    : shopData?.colors.map((c) =>
+                    : shopData?.colors.map((c, idx) =>
                         c.hex ? (
                           <div
-                            key={c.name}
+                            key={`${c.name}-${idx}`}
                             title={c.name}
                             className={`color-item w-8 h-8 rounded-full cursor-pointer border-2 duration-300 ${color === c.name ? "border-black scale-110" : "border-transparent hover:border-black"}`}
                             style={{ backgroundColor: c.hex }}
@@ -336,7 +328,7 @@ const ShopBreadCrumb1: React.FC<Props> = ({
                           </div>
                         ) : (
                           <div
-                            key={c.name}
+                            key={`${c.name}-${idx}`}
                             className={`color-item px-3 py-[5px] flex items-center justify-center rounded-full border cursor-pointer caption2 duration-300 ${color === c.name ? "bg-black text-white border-black" : "border-line hover:border-black"}`}
                             onClick={() => handleColor(c.name)}>
                             {c.name}
@@ -359,7 +351,7 @@ const ShopBreadCrumb1: React.FC<Props> = ({
               )}
             </div>
 
-            {/* ── Products ───────────────────────────── */}
+            {/* ── Products ── */}
             <div className="list-product-block lg:w-3/4 md:w-2/3 w-full md:pl-3">
               {/* Toolbar */}
               <div className="filter-heading flex items-center justify-between gap-5 flex-wrap">
@@ -387,8 +379,16 @@ const ShopBreadCrumb1: React.FC<Props> = ({
                 </div>
                 <div className="right flex items-center gap-3">
                   <div className="total-product caption1">
-                    {loading ? "..." : totalProducts}
-                    <span className="text-secondary pl-1">Products Found</span>
+                    {loading ? (
+                      <span className="text-secondary">Loading...</span>
+                    ) : (
+                      <>
+                        {totalProducts}
+                        <span className="text-secondary pl-1">
+                          Products Found
+                        </span>
+                      </>
+                    )}
                   </div>
                   <div className="select-block relative">
                     <select
@@ -472,8 +472,7 @@ const ShopBreadCrumb1: React.FC<Props> = ({
 
               {/* Grid */}
               {loading ? (
-                <div
-                  className={`list-product hide-product-sold grid ${layoutCol === 3 ? "lg:grid-cols-3 sm:grid-cols-2 grid-cols-2" : "grid-cols-1"} sm:gap-[30px] gap-[20px] mt-7`}>
+                <div className={gridClass}>
                   {Array.from({ length: productPerPage }).map((_, i) => (
                     <div
                       key={i}
@@ -481,16 +480,8 @@ const ShopBreadCrumb1: React.FC<Props> = ({
                     />
                   ))}
                 </div>
-              ) : products.length === 0 ? (
-                <div className="text-center py-20">
-                  <div className="heading5 mb-2">No products found</div>
-                  <div className="caption1 text-secondary">
-                    Try adjusting or clearing your filters
-                  </div>
-                </div>
               ) : (
-                <div
-                  className={`list-product hide-product-sold grid ${layoutCol === 3 ? "lg:grid-cols-3 sm:grid-cols-2 grid-cols-2" : "grid-cols-1"} sm:gap-[30px] gap-[20px] mt-7`}>
+                <div className={gridClass}>
                   {products.map((item) => (
                     <Product
                       key={item.id}

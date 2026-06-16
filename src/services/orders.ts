@@ -89,6 +89,35 @@ export const ordersService = {
         if (!res.ok) throw json
         return json.data
     },
+    
+    placeGuestOrder: async (data: {
+    name: string
+    phone: string
+    email?: string
+    address: {
+        recipient_name: string
+        phone: string
+        address_line_1: string
+        address_line_2?: string
+        city: string
+        state?: string
+        postal_code?: string
+        country: string
+    }
+    items: { variant_id: string; qty: number }[]
+    coupon_code?: string
+    shipping_fee?: number
+    notes?: string
+    }): Promise<Order> => {
+        const res = await fetch(`${API_URL}/orders/guest`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        })
+        const json = await res.json()
+        if (!res.ok) throw json
+        return json.data
+    },
 
     list: async (token: string, status?: string): Promise<{ data: Order[]; meta: any }> => {
         const params = status ? `?status=${status}` : ''

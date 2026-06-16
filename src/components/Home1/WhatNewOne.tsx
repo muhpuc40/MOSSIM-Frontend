@@ -64,11 +64,7 @@ const WhatNewOne: React.FC<Props> = ({ start = 0, limit = 16 }) => {
                 {loading ? (
                     <div className="list-product hide-product-sold grid lg:grid-cols-4 grid-cols-2 sm:gap-[30px] gap-[20px] md:mt-10 mt-6">
                         {Array.from({ length: 8 }).map((_, i) => (
-                            <div key={i} className="animate-pulse">
-                                <div className="aspect-[3/4] bg-gray-200 rounded-2xl" />
-                                <div className="h-4 bg-gray-200 rounded mt-3 w-3/4" />
-                                <div className="h-3 bg-gray-200 rounded mt-2 w-1/2" />
-                            </div>
+                            <div key={i} className="aspect-[3/4] bg-surface rounded-2xl animate-pulse" />
                         ))}
                     </div>
                 ) : visible.length === 0 ? (

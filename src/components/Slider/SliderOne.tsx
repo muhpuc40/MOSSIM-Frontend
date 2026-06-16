@@ -10,6 +10,7 @@ import 'swiper/css/effect-fade'
 
 import { bannersService } from '@/services/banners'
 import type { Banner } from '@/type/Banner'
+import Loading from '@/components/Other/Loading'
 
 const SliderOne = () => {
     const [banners, setBanners] = useState<Banner[]>([])
@@ -19,25 +20,17 @@ const SliderOne = () => {
         let mounted = true
 
         bannersService.list()
-            .then((data) => {
-                if (mounted) setBanners(data)
-            })
-            .catch((err) => {
-                console.error('Banner fetch failed:', err)
-            })
-            .finally(() => {
-                if (mounted) setLoading(false)
-            })
+            .then((data) => { if (mounted) setBanners(data) })
+            .catch((err) => { console.error('Banner fetch failed:', err) })
+            .finally(() => { if (mounted) setLoading(false) })
 
         return () => { mounted = false }
     }, [])
 
     if (loading) {
         return (
-            <div className="slider-block style-one bg-linear xl:h-[860px] lg:h-[800px] md:h-[580px] sm:h-[500px] h-[350px] max-[420px]:h-[320px] w-full">
-                <div className="h-full w-full flex items-center justify-center">
-                    <span className="text-secondary">Loading...</span>
-                </div>
+            <div className="slider-block style-one bg-linear xl:h-[860px] lg:h-[800px] md:h-[580px] sm:h-[500px] h-[350px] max-[420px]:h-[320px] w-full flex items-center justify-center">
+                <Loading />
             </div>
         )
     }

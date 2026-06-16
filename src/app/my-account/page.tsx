@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import TopNavOne from '@/components/Header/TopNav/TopNavOne'
 import MenuOne from '@/components/Header/Menu/MenuOne'
+import Loading from '@/components/Other/Loading'
 import Breadcrumb from '@/components/Breadcrumb/Breadcrumb'
 import Footer from '@/components/Footer/Footer'
 import * as Icon from "@phosphor-icons/react/dist/ssr"
@@ -267,13 +268,8 @@ const MyAccount = () => {
 
     /* ── Guard ───────────────────────── */
     if (loading || !user) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="caption1 text-secondary">Loading...</div>
-            </div>
-        )
+        return <Loading fullScreen />
     }
-
     const avatarSrc = user.avatar_url || '/images/avatar/1.png'
 
     /* ── Order status filter tabs ────── */

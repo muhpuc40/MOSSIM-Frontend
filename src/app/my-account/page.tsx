@@ -51,11 +51,18 @@ const MyAccount = () => {
             <Sidebar activeTab={activeTab} onTabChange={gotoTab} />
             <div className="right md:w-2/3 w-full pl-2.5">
               {activeTab === "dashboard" && token && (
-                <DashboardTab token={token} onSeeAll={() => gotoTab("orders")} />
+                <DashboardTab
+                  token={token}
+                  onSeeAll={() => gotoTab("orders")}
+                />
               )}
               {activeTab === "orders" && token && <OrdersTab token={token} />}
-              {activeTab === "address" && token && <AddressesTab token={token} />}
-              {activeTab === "setting" && token && <SettingsTab token={token} />}
+              {activeTab === "address" && token && (
+                <AddressesTab token={token} />
+              )}
+              {activeTab === "setting" && token && (
+                <SettingsTab token={token} />
+              )}
             </div>
           </div>
         </div>

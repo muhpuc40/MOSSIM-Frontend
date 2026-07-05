@@ -264,7 +264,12 @@ const Wishlist = () => {
                     No products match the selected criteria.
                   </div>
                 ) : (
-                  <Product key={item.id} data={item} type="grid" />
+                  <Product
+                    key={item.id}
+                    data={item}
+                    type="grid"
+                    style="style-1"
+                  />
                 ),
               )}
             </div>

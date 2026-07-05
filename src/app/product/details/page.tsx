@@ -1,44 +1,41 @@
-"use client";
-
-import React, { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import TopNavOne from "@/components/Header/TopNav/TopNavOne";
 import MenuOne from "@/components/Header/Menu/MenuOne";
 import BreadcrumbProduct from "@/components/Breadcrumb/BreadcrumbProduct";
 import Default from "@/components/Product/Detail/Default";
 import Footer from "@/components/Footer/Footer";
-import productData from "@/data/Product.json";
+import { productsService, mapToProductType } from "@/services/products";
 
-const ProductDetailsContent = () => {
-  const searchParams = useSearchParams();
-  let productId = searchParams.get("id");
+export default async function ProductDetails({
+  searchParams,
+}: {
+  searchParams: { id?: string };
+}) {
+  const productId = searchParams.id;
+
+  if (!productId) {
+    return <div>Product not found.</div>;
+  }
+
+  const apiProduct = await productsService.show(productId);
+  const product = mapToProductType(apiProduct);
 
   return (
     <>
       <TopNavOne props="style-one bg-black" />
+
       <div id="header" className="relative w-full">
         <MenuOne props="bg-white" />
+
         <BreadcrumbProduct
-          data={productData}
+          data={[product]}
           productPage="Details"
           productId={productId}
         />
       </div>
-      <Default data={productData} productId={productId} />
+
+      <Default data={[product]} productId={productId} />
+
       <Footer />
     </>
   );
-};
-
-const ProductDetails = () => {
-  return (
-    <Suspense
-      fallback={
-        <div className="text-center py-32 text-secondary">Loading...</div>
-      }>
-      <ProductDetailsContent />
-    </Suspense>
-  );
-};
-
-export default ProductDetails;
+}

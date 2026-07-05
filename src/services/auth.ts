@@ -1,5 +1,5 @@
-import { Customer, CustomerAddress } from '@/services/auth'
-
+//import { Customer, CustomerAddress } from '@/services/auth'
+import type { Customer, CustomerAddress } from "@/type/Auth";
 const API_URL = process.env.NEXT_PUBLIC_API_URL 
 
 const jsonHeaders = (token?: string) => ({

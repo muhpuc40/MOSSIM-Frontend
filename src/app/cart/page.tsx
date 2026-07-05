@@ -63,7 +63,8 @@ const Cart = () => {
   /* ── Qty handler ─────────────────────── */
   const handleQty = (id: string, qty: number, size: string, color: string) => {
     if (qty < 1) return;
-    updateQty(product.variant_id, newQty);
+    // updateQty(product.variant_id, newQty);
+    updateQty(id, qty);
   };
 
   const goToCheckout = () => {

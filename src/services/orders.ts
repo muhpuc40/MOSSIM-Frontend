@@ -1,5 +1,4 @@
 import { Order, CouponResult } from '@/type/Order'
-import { getProductVariants, productsService } from './products'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -9,54 +8,21 @@ const headers = (token: string) => ({
     'Authorization': `Bearer ${token}`,
 })
 
-/* ── Resolve cart items to variant_id + qty ── */
-export async function resolveCartItems(
+/* ── Resolve cart items to variant_id + qty ──
+   Cart items already carry variant_id (set at add-to-cart time). */
+export function resolveCartItems(
     cartArray: any[]
-): Promise<{ variant_id: string; qty: number }[] | null> {
-    const items: { variant_id: string; qty: number }[] = []
+): { variant_id: string; qty: number }[] | null {
+    if (!cartArray.length) return null
 
-    for (const item of cartArray) {
-        let variants = getProductVariants(item.id)
-
-        // Cache miss — fetch product to populate cache
-        if (!variants.length) {
-            try {
-                await productsService.show(item.id)
-                variants = getProductVariants(item.id)
-            } catch {
-                console.error(`Failed to resolve variants for product ${item.id}`)
-                return null
-            }
-        }
-
-        // Match by color + size
-        let variant = variants.find(v =>
-            v.color?.color_name === item.selectedColor &&
-            v.size?.size_label  === item.selectedSize
-        )
-
-        // Fallback: match by size only
-        if (!variant && item.selectedSize) {
-            variant = variants.find(v => v.size?.size_label === item.selectedSize)
-        }
-
-        // Fallback: default variant
-        if (!variant) {
-            variant = variants.find(v => v.is_default) ?? variants[0]
-        }
-
-        if (!variant) {
-            console.error(`No variant found for ${item.name}`)
-            return null
-        }
-
-        items.push({
-            variant_id: variant.id,
+    const items = cartArray
+        .filter(item => item.variant_id)
+        .map(item => ({
+            variant_id: item.variant_id,
             qty: item.quantity || 1,
-        })
-    }
+        }))
 
-    return items
+    return items.length ? items : null
 }
 
 /* ── Orders service ──────────────────────── */
@@ -71,6 +37,30 @@ export const ordersService = {
         const json = await res.json()
         if (!res.ok) throw json
         return json.data
+    },
+
+    track: async (orderNumber: string): Promise<{
+        timeline: Array<{
+            status: string;
+            status_label?: string;
+            timestamp: string;
+            description?: string;
+            location?: string;
+            note?: string;
+        }>;
+        shipment?: any;
+        }> => {
+        const res = await fetch(`${API_URL}/shipments/track/${orderNumber}`, {
+            cache: "no-store",
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+            throw new Error(json.message || `Failed to track order (${res.status})`);
+        }
+        return {
+            timeline: json.data.order_timeline || json.data.timeline || [],
+            shipment: json.data.shipment,
+        };
     },
 
     placeOrder: async (token: string, data: {
@@ -89,25 +79,25 @@ export const ordersService = {
         if (!res.ok) throw json
         return json.data
     },
-    
+
     placeGuestOrder: async (data: {
-    name: string
-    phone: string
-    email?: string
-    address: {
-        recipient_name: string
+        name: string
         phone: string
-        address_line_1: string
-        address_line_2?: string
-        city: string
-        state?: string
-        postal_code?: string
-        country: string
-    }
-    items: { variant_id: string; qty: number }[]
-    coupon_code?: string
-    shipping_fee?: number
-    notes?: string
+        email?: string
+        address: {
+            recipient_name: string
+            phone: string
+            address_line_1: string
+            address_line_2?: string
+            city: string
+            state?: string
+            postal_code?: string
+            country: string
+        }
+        items: { variant_id: string; qty: number }[]
+        coupon_code?: string
+        shipping_fee?: number
+        notes?: string
     }): Promise<Order> => {
         const res = await fetch(`${API_URL}/orders/guest`, {
             method: 'POST',

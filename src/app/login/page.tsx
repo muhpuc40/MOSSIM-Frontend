@@ -11,7 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
   const router = useRouter();
-  const { login, isLoggedIn, loading } = useAuth()
+  const { login, isLoggedIn, loading } = useAuth();
   const [loginVal, setLoginVal] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,15 +37,12 @@ const Login = () => {
     }
   };
   useEffect(() => {
-      if (!loading && isLoggedIn) router.replace('/my-account')
-  }, [loading, isLoggedIn, router])
+    if (!loading && isLoggedIn) router.replace("/my-account");
+  }, [loading, isLoggedIn, router]);
 
   return (
     <>
-      <TopNavOne
-        props="style-one bg-black"
-        slogan="New customers save 10% with the code GET10"
-      />
+      <TopNavOne props="style-one bg-black" />
       <div id="header" className="relative w-full">
         <MenuOne props="bg-transparent" />
         <Breadcrumb heading="Login" subHeading="Login" />

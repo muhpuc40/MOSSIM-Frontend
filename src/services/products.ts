@@ -112,21 +112,24 @@ export function mapToProductType(p: ApiProduct): ProductType {
 interface ListParams {
     type?: 'all' | 'man' | 'women' | 'kids' | 'unisex'
     per_page?: number
+    search?: string
+
 }
 
 export const productsService = {
-    list: async (params: ListParams = {}): Promise<ProductType[]> => {
-        const search = new URLSearchParams()
-        if (params.type && params.type !== 'all') search.append('type', params.type)
-        if (params.per_page) search.append('per_page', String(params.per_page))
+list: async (params: ListParams = {}): Promise<ProductType[]> => {
+    const qp = new URLSearchParams()
+    if (params.type && params.type !== 'all') qp.append('type', params.type)
+    if (params.per_page) qp.append('per_page', String(params.per_page))
+    if (params.search) qp.append('search', params.search)
 
-        const qs = search.toString()
-        const res = await fetch(`${API_URL}/products${qs ? '?' + qs : ''}`, { cache: 'no-store' })
-        if (!res.ok) throw new Error(`Failed to load products (${res.status})`)
+    const qs = qp.toString()
+    const res = await fetch(`${API_URL}/products${qs ? '?' + qs : ''}`, { cache: 'no-store' })
+    if (!res.ok) throw new Error(`Failed to load products (${res.status})`)
 
-        const json = await res.json()
-        return (json.data as ApiProduct[]).map(mapToProductType)
-    },
+    const json = await res.json()
+    return (json.data as ApiProduct[]).map(mapToProductType)
+},
 
     show: async (id: string): Promise<ApiProduct> => {
         const res = await fetch(`${API_URL}/products/${id}`, { cache: 'no-store' })

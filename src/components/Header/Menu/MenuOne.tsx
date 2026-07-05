@@ -352,9 +352,14 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                           </Link>
                         </div>
                         <div className="bottom mt-4 pt-4 border-t border-line" />
-                        <Link href="#!" className="body1 hover:underline">
-                          Support
-                        </Link>
+<Link 
+  href="https://wa.me/8801322447700?text=I%20need%20help" 
+  target="_blank"
+  rel="noopener noreferrer"
+  className="body1 hover:underline"
+>
+  Support
+</Link>
                       </div>
                     </div>
                   )}

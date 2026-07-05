@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { ProductType } from '@/type/ProductType'
 import Product from '../Product'
 import Rate from '@/components/Other/Rate'
+import Loading from '@/components/Other/Loading'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Thumbs, Scrollbar } from 'swiper/modules'
 import type { Swiper as SwiperType } from 'swiper/types'
@@ -29,13 +30,14 @@ const Default: React.FC<Props> = ({ productId }) => {
     const [openSizeGuide, setOpenSizeGuide] = useState(false)
     const [activeColor, setActiveColor] = useState<string>('')
     const [activeSize, setActiveSize] = useState<string>('')
+    const [quantity, setQuantity] = useState<number>(1)
 
     const [detail, setDetail] = useState<ApiProduct | null>(null)
     const [related, setRelated] = useState<ProductType[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    const { addToCart, updateCart, cartState } = useCart()
+    const { addToCart } = useCart()
     const { openModalCart } = useModalCartContext()
     const { addToWishlist, removeFromWishlist, wishlistState } = useWishlist()
     const { openModalWishlist } = useModalWishlistContext()
@@ -50,6 +52,7 @@ const Default: React.FC<Props> = ({ productId }) => {
         setThumbsSwiper(null)
         setActiveColor('')
         setActiveSize('')
+        setQuantity(1)
 
         productsService.show(String(productId))
             .then((data) => {
@@ -79,13 +82,14 @@ const Default: React.FC<Props> = ({ productId }) => {
             .map((v) => v.size.size_label)
     }, [detail, activeColor])
 
-    /* ── On color change: pick first available size ─────── */
+    /* ── On color change: pick first available size if current isn't valid */
     useEffect(() => {
         if (!activeColor) return
         if (activeSize && availableSizes.includes(activeSize)) return
         setActiveSize(availableSizes[0] || '')
     }, [activeColor, availableSizes])
 
+    /* ── The exact variant for current color + size ─────── */
     const selectedVariant = useMemo(() => {
         if (!detail || !activeColor || !activeSize) return null
         return detail.variants.find(
@@ -117,16 +121,21 @@ const Default: React.FC<Props> = ({ productId }) => {
 
     /* ── Handlers ───────────────────────────────────────── */
     const handleAddToCart = () => {
-        if (!productMain) return
+        if (!productMain || !detail) return
         if (!activeColor) { alert('Please select a color'); return }
         if (!activeSize) { alert('Please select a size'); return }
+        if (!selectedVariant) { alert('This combination is unavailable'); return }
 
-        if (!cartState.cartArray.find((i) => i.id === productMain.id)) {
-            addToCart({ ...productMain })
-            updateCart(productMain.id, productMain.quantityPurchase, activeSize, activeColor)
-        } else {
-            updateCart(productMain.id, productMain.quantityPurchase, activeSize, activeColor)
-        }
+        addToCart({
+            ...productMain,
+            quantity,
+            selectedColor: activeColor,
+            selectedSize: activeSize,
+            variant_id: selectedVariant.id,
+            variant_sku: selectedVariant.sku,
+            price: selectedVariant.price?.current_price ?? productMain.price,
+            originPrice: selectedVariant.price?.actual_price ?? productMain.originPrice,
+        })
         openModalCart()
     }
 
@@ -154,18 +163,10 @@ const Default: React.FC<Props> = ({ productId }) => {
         openModalCompare()
     }
 
-    const handleIncreaseQuantity = () => {
-        if (!productMain) return
-        productMain.quantityPurchase += 1
-        updateCart(productMain.id, productMain.quantityPurchase + 1, activeSize, activeColor)
-    }
-    const handleDecreaseQuantity = () => {
-        if (!productMain || productMain.quantityPurchase <= 1) return
-        productMain.quantityPurchase -= 1
-        updateCart(productMain.id, productMain.quantityPurchase - 1, activeSize, activeColor)
-    }
+    const handleIncreaseQuantity = () => setQuantity((q) => q + 1)
+    const handleDecreaseQuantity = () => setQuantity((q) => Math.max(1, q - 1))
 
-    if (loading) return <div className="text-center py-32 text-secondary">Loading product...</div>
+    if (loading) return <Loading />
     if (error || !detail || !productMain) return <div className="text-center py-32 text-red">{error || 'Product not found'}</div>
 
     const safeThumbs = thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null
@@ -238,7 +239,6 @@ const Default: React.FC<Props> = ({ productId }) => {
                             </div>
 
                             <div className="flex items-center mt-3">
-                                
                                 <span className='caption1 text-secondary'>{detail.description}</span>
                             </div>
 
@@ -259,12 +259,11 @@ const Default: React.FC<Props> = ({ productId }) => {
                                             </div>
                                         </>
                                     )}
-    
                                 </div>
                             )}
 
                             <div className="list-action mt-6">
-                                {/* Colors — hex swatches */}
+                                {/* Colors */}
                                 <div className="choose-color">
                                     <div className="text-title">Colors: <span className='text-title color'>{activeColor}</span></div>
                                     <div className="list-color flex items-center gap-2 flex-wrap mt-3">
@@ -283,7 +282,7 @@ const Default: React.FC<Props> = ({ productId }) => {
                                     </div>
                                 </div>
 
-                                {/* Sizes — filtered by color */}
+                                {/* Sizes */}
                                 <div className="choose-size mt-5">
                                     <div className="heading flex items-center justify-between">
                                         <div className="text-title">Size: <span className='text-title size'>{activeSize}</span></div>
@@ -324,9 +323,9 @@ const Default: React.FC<Props> = ({ productId }) => {
                                         <Icon.Minus
                                             size={20}
                                             onClick={handleDecreaseQuantity}
-                                            className={`${productMain.quantityPurchase === 1 ? 'disabled' : ''} cursor-pointer`}
+                                            className={`${quantity === 1 ? 'disabled' : ''} cursor-pointer`}
                                         />
-                                        <div className="body1 font-semibold">{productMain.quantityPurchase}</div>
+                                        <div className="body1 font-semibold">{quantity}</div>
                                         <Icon.Plus
                                             size={20}
                                             onClick={handleIncreaseQuantity}
@@ -356,7 +355,6 @@ const Default: React.FC<Props> = ({ productId }) => {
                                 </div>
 
                                 <div className="more-infor mt-6">
-       
                                     <div className="flex items-center gap-1 mt-3">
                                         <div className="text-title">SKU:</div>
                                         <div className="text-secondary">{selectedVariant?.sku || detail.product_code}</div>
@@ -365,13 +363,8 @@ const Default: React.FC<Props> = ({ productId }) => {
                                         <div className="text-title">Categories:</div>
                                         <div className="text-secondary capitalize">{detail.type}</div>
                                     </div>
-
                                 </div>
-
-                                
                             </div>
-
-
                         </div>
                     </div>
                 </div>

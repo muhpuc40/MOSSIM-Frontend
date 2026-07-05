@@ -32,6 +32,7 @@ export interface OrderAddress {
 export interface Order {
   id: string;
   order_number: string;
+  tracking_number?: string | null;
   channel: string;
   status: string;
   status_label: string;

@@ -19,8 +19,9 @@ const ModalQuickview = () => {
     const [openSizeGuide, setOpenSizeGuide] = useState(false)
     const [activeColor, setActiveColor] = useState<string>('')
     const [activeSize, setActiveSize] = useState<string>('')
+    const [quantity, setQuantity] = useState<number>(1)
 
-    const { addToCart, updateCart, cartState } = useCart()
+    const { addToCart } = useCart()
     const { openModalCart } = useModalCartContext()
     const { addToWishlist, removeFromWishlist, wishlistState } = useWishlist()
     const { openModalWishlist } = useModalWishlistContext()
@@ -38,11 +39,13 @@ const ModalQuickview = () => {
         if (!selectedProduct || variants.length === 0) {
             setActiveColor('')
             setActiveSize('')
+            setQuantity(1)
             return
         }
         const def = getDefaultVariant(variants)
         setActiveColor(def?.color?.color_name || '')
         setActiveSize(def?.size?.size_label || '')
+        setQuantity(1)
     }, [selectedProduct, variants])
 
     /* ── Sizes available for selected color ─────────────── */
@@ -60,7 +63,7 @@ const ModalQuickview = () => {
         setActiveSize(availableSizes[0] || '')
     }, [activeColor, availableSizes])
 
-    /* ── Currently selected variant (drives price) ──────── */
+    /* ── Currently selected variant ─────────────────────── */
     const selectedVariant = useMemo(() => {
         if (!activeColor || !activeSize) return null
         return variants.find(
@@ -68,7 +71,7 @@ const ModalQuickview = () => {
         ) || null
     }, [activeColor, activeSize, variants])
 
-    /* ── Display price: selected variant or default ─────── */
+    /* ── Display price ──────────────────────────────────── */
     const displayPrice =
         selectedVariant?.price ||
         getDefaultVariant(variants)?.price ||
@@ -84,12 +87,20 @@ const ModalQuickview = () => {
     /* ── Handlers ───────────────────────────────────────── */
     const handleAddToCart = () => {
         if (!selectedProduct) return
-        if (!cartState.cartArray.find((i) => i.id === selectedProduct.id)) {
-            addToCart({ ...selectedProduct })
-            updateCart(selectedProduct.id, selectedProduct.quantityPurchase, activeSize, activeColor)
-        } else {
-            updateCart(selectedProduct.id, selectedProduct.quantityPurchase, activeSize, activeColor)
-        }
+        if (!activeColor) { alert('Please select a color'); return }
+        if (!activeSize) { alert('Please select a size'); return }
+        if (!selectedVariant) { alert('This combination is unavailable'); return }
+
+        addToCart({
+            ...selectedProduct,
+            quantity,
+            selectedColor: activeColor,
+            selectedSize: activeSize,
+            variant_id: selectedVariant.id,
+            variant_sku: selectedVariant.sku,
+            price: selectedVariant.price?.current_price ?? selectedProduct.price,
+            originPrice: selectedVariant.price?.actual_price ?? selectedProduct.originPrice,
+        })
         openModalCart()
         closeQuickview()
     }
@@ -118,16 +129,8 @@ const ModalQuickview = () => {
         openModalCompare()
     }
 
-    const handleIncreaseQuantity = () => {
-        if (!selectedProduct) return
-        selectedProduct.quantityPurchase += 1
-        updateCart(selectedProduct.id, selectedProduct.quantityPurchase + 1, activeSize, activeColor)
-    }
-    const handleDecreaseQuantity = () => {
-        if (!selectedProduct || selectedProduct.quantityPurchase <= 1) return
-        selectedProduct.quantityPurchase -= 1
-        updateCart(selectedProduct.id, selectedProduct.quantityPurchase - 1, activeSize, activeColor)
-    }
+    const handleIncreaseQuantity = () => setQuantity((q) => q + 1)
+    const handleDecreaseQuantity = () => setQuantity((q) => Math.max(1, q - 1))
 
     return (
         <>
@@ -137,26 +140,24 @@ const ModalQuickview = () => {
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="flex h-full max-md:flex-col-reverse gap-y-6">
-                        {/* Images — all images */}
                         <div className="left lg:w-[388px] md:w-[300px] flex-shrink-0 px-6">
-                            <div className="list-img max-md:flex items-center gap-4">
+                            <div className="list-img max-md:flex items-start gap-4">
                                 {selectedProduct?.images.map((item, index) => (
-                                    <div key={index} className="bg-img w-full aspect-[3/4] max-md:w-[150px] max-md:flex-shrink-0 rounded-[20px] overflow-hidden md:mt-6">
+                                    <div className="bg-img w-full aspect-[3/4] max-md:w-[150px] max-md:flex-shrink-0 rounded-[20px] overflow-hidden md:mt-6" key={index}>
                                         <Image
                                             src={item}
                                             width={1500}
                                             height={2000}
-                                            alt={selectedProduct?.name}
-                                            priority
+                                            alt={item}
+                                            priority={true}
                                             className='w-full h-full object-cover'
                                         />
                                     </div>
                                 ))}
                             </div>
                         </div>
-
                         <div className="right w-full px-4">
-                            <div className="heading pb-6 px-4 flex items-center justify-between relative">
+                            <div className="heading pb-3 flex items-center justify-between relative">
                                 <div className="heading5">Quick View</div>
                                 <div
                                     className="close-btn absolute right-0 top-0 w-6 h-6 rounded-full bg-surface flex items-center justify-center duration-300 cursor-pointer hover:bg-black hover:text-white"
@@ -165,15 +166,14 @@ const ModalQuickview = () => {
                                     <Icon.X size={14} />
                                 </div>
                             </div>
-
-                            <div className="product-infor px-4">
+                            <div className="product-infor overflow-y-auto">
                                 <div className="flex justify-between">
                                     <div>
                                         <div className="caption2 text-secondary font-semibold uppercase">{selectedProduct?.type}</div>
                                         <div className="heading4 mt-1">{selectedProduct?.name}</div>
                                     </div>
                                     <div
-                                        className={`add-wishlist-btn w-10 h-10 flex items-center justify-center border border-line cursor-pointer rounded-lg duration-300 flex-shrink-0 hover:bg-black hover:text-white ${wishlistState.wishlistArray.some((i) => i.id === selectedProduct?.id) ? 'active' : ''}`}
+                                        className={`add-wishlist-btn w-12 h-12 flex items-center justify-center border border-line cursor-pointer rounded-xl duration-300 hover:bg-black hover:text-white ${wishlistState.wishlistArray.some((i) => i.id === selectedProduct?.id) ? 'active' : ''}`}
                                         onClick={handleAddToWishlist}
                                     >
                                         {wishlistState.wishlistArray.some((i) => i.id === selectedProduct?.id)
@@ -182,7 +182,7 @@ const ModalQuickview = () => {
                                     </div>
                                 </div>
 
-                                {/* Price — from selected variant */}
+                                {/* Price */}
                                 {displayPrice && (
                                     <div className="flex items-center gap-3 flex-wrap mt-5 pb-6 border-b border-line">
                                         <div className="product-price heading5">
@@ -223,7 +223,7 @@ const ModalQuickview = () => {
                                         </div>
                                     </div>
 
-                                    {/* Sizes — filtered by color */}
+                                    {/* Sizes */}
                                     <div className="choose-size mt-5">
                                         <div className="heading flex items-center justify-between">
                                             <div className="text-title">Size: <span className='text-title size'>{activeSize}</span></div>
@@ -263,9 +263,9 @@ const ModalQuickview = () => {
                                         <div className="quantity-block md:p-3 max-md:py-1.5 max-md:px-3 flex items-center justify-between rounded-lg border border-line sm:w-[180px] w-[120px] flex-shrink-0">
                                             <Icon.Minus
                                                 onClick={handleDecreaseQuantity}
-                                                className={`${selectedProduct?.quantityPurchase === 1 ? 'disabled' : ''} cursor-pointer body1`}
+                                                className={`${quantity === 1 ? 'disabled' : ''} cursor-pointer body1`}
                                             />
-                                            <div className="body1 font-semibold">{selectedProduct?.quantityPurchase}</div>
+                                            <div className="body1 font-semibold">{quantity}</div>
                                             <Icon.Plus
                                                 onClick={handleIncreaseQuantity}
                                                 className='cursor-pointer body1'
@@ -290,17 +290,6 @@ const ModalQuickview = () => {
                                                 <Icon.ShareNetwork weight='fill' className='heading6' />
                                             </div>
                                             <span>Share Products</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="more-infor mt-6">
-                                        <div className="flex items-center gap-1 mt-3">
-                                            <div className="text-title">SKU:</div>
-                                            <div className="text-secondary">{selectedVariant?.sku || selectedProduct?.brand}</div>
-                                        </div>
-                                        <div className="flex items-center gap-1 mt-3">
-                                            <div className="text-title">Categories:</div>
-                                            <div className="text-secondary capitalize">{selectedProduct?.type}</div>
                                         </div>
                                     </div>
                                 </div>

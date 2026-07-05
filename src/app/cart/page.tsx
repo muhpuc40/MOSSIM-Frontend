@@ -18,7 +18,7 @@ const SHIP_OUTSIDE = 120;
 
 const Cart = () => {
   const router = useRouter();
-  const { cartState, updateCart, removeFromCart } = useCart();
+  const { cartState, updateQty, removeFromCart } = useCart();
 
   /* ── Countdown ───────────────────────── */
   const [timeLeft, setTimeLeft] = useState(countdownTime());
@@ -63,7 +63,7 @@ const Cart = () => {
   /* ── Qty handler ─────────────────────── */
   const handleQty = (id: string, qty: number, size: string, color: string) => {
     if (qty < 1) return;
-    updateCart(id, qty, size, color);
+    updateQty(product.variant_id, newQty);
   };
 
   const goToCheckout = () => {
@@ -72,10 +72,7 @@ const Cart = () => {
 
   return (
     <>
-      <TopNavOne
-        props="style-one bg-black"
-        slogan="New customers save 10% with the code GET10"
-      />
+      <TopNavOne props="style-one bg-black" />
       <div id="header" className="relative w-full">
         <MenuOne props="bg-transparent" />
         <Breadcrumb heading="Shopping Cart" subHeading="Shopping Cart" />
@@ -86,7 +83,6 @@ const Cart = () => {
           <div className="content-main flex justify-between max-xl:flex-col gap-y-8">
             {/* ── Left ──────────────────────────── */}
             <div className="xl:w-2/3 xl:pr-3 w-full">
-
               {/* Free shipping progress */}
               <div className="heading banner mt-5">
                 <div className="text">
@@ -150,14 +146,11 @@ const Cart = () => {
                       </div>
                     ) : (
                       cartState.cartArray.map((product) => {
-                        const sku = getVariantSku(
-                          product.id,
-                          product.selectedColor,
-                          product.selectedSize,
-                        );
+                        const sku = product.variant_sku;
+
                         return (
                           <div
-                            key={product.id}
+                            key={product.variant_id}
                             className="item flex md:mt-7 md:pb-7 mt-5 pb-5 border-b border-line w-full">
                             {/* Product info */}
                             <div className="w-1/2">
@@ -250,7 +243,9 @@ const Cart = () => {
                             <div className="w-1/12 flex items-center justify-center">
                               <Icon.XCircle
                                 className="text-xl max-md:text-base text-red cursor-pointer hover:text-black duration-300"
-                                onClick={() => removeFromCart(product.id)}
+                                onClick={() =>
+                                  removeFromCart(product.variant_id)
+                                }
                               />
                             </div>
                           </div>
@@ -352,9 +347,7 @@ const Cart = () => {
                     }>
                     Proceed To Checkout
                   </div>
-                  <Link
-                    className="text-button hover-underline"
-                    href="/shop">
+                  <Link className="text-button hover-underline" href="/shop">
                     Continue shopping
                   </Link>
                 </div>

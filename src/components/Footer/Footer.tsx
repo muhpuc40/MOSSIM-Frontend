@@ -104,7 +104,7 @@ const Footer = () => {
                     </Link>
                     <Link
                       className="caption1 has-line-before duration-300 w-fit pt-2"
-                      href={"/pages/faqs"}>
+                      href={"/privacy-policy"}>
                       Privacy Policy
                     </Link>
                     <Link
@@ -117,7 +117,7 @@ const Footer = () => {
                 <div className="newsletter basis-1/3 pl-7 max-md:basis-full max-md:pl-0">
                   <div className="text-button-uppercase">Newletter</div>
                   <div className="caption1 mt-3">
-                    Sign up for our newsletter and get 10% off your first
+                    Sign up for our newsletter and get your first
                     purchase
                   </div>
                   <div className="input-block w-full h-[52px] mt-4">

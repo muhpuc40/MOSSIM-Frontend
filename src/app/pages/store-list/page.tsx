@@ -27,28 +27,23 @@ const StoreList = () => {
                 className="lg:absolute relative top-0 left-0 lg:bottom-0 lg:w-1/2 w-full h-full object-cover"
               />
               <div className="text-content lg:w-1/2 lg:pr-20 lg:pl-[100px] lg:py-14 sm:py-10 py-6 max-lg:px-6">
-                <div className="heading3">New York Office</div>
+                <div className="heading3">MOSSIM Display Shop</div>
                 <div className="list-featrue lg:mt-10 mt-6">
                   <div className="item flex lg:gap-10 gap-6">
                     <div className="w-1/2">
                       <div className="heading6">Address:</div>
                       <div className="text-secondary mt-2">
-                        2163 Phillips Gap Rd West Jefferson, North Carolina
+                        01 (Kha), Block #A, House No, 14 Rd NO - 2/K/A,
+                        Chattogram 4203
                       </div>
                     </div>
                     <div className="w-1/2">
                       <div className="heading6">Opentime:</div>
                       <div className="text-secondary mt-2 whitespace-nowrap">
-                        Monay - Friday:
+                        Saturday - thursday:
                       </div>
                       <div className="text-title text-black whitespace-nowrap">
-                        08:00 - 20:00
-                      </div>
-                      <div className="text-secondary whitespace-nowrap">
-                        Saturday - Sunday:
-                      </div>
-                      <div className="text-title text-black whitespace-nowrap">
-                        10:00 - 18:00
+                        10:00 AM - 06:00 PM
                       </div>
                     </div>
                   </div>
@@ -58,31 +53,25 @@ const StoreList = () => {
                     <div className="w-1/2">
                       <div className="heading6">Infomation:</div>
                       <div className="text-secondary mt-2">
-                        +1 666 234 8888
+                        +88 01322-447700
                         <br />
-                        hi.avitex@gmail.com
+                        info@mossim.net
                       </div>
                     </div>
                     <div className="w-1/2">
                       <div className="heading6">Our social media:</div>
                       <div className="flex items-center sm:gap-4 gap-2 mt-2">
                         <Link
-                          href={"https://www.facebook.com/"}
+                          href={"https://www.facebook.com/mossimbd"}
                           target="_blank"
                           className="item bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black hover:text-white duration-300">
                           <div className="icon-facebook"></div>
                         </Link>
                         <Link
-                          href={"https://www.instagram.com/"}
+                          href={"https://www.instagram.com/mossimbd/"}
                           target="_blank"
                           className="item bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black hover:text-white duration-300">
                           <div className="icon-instagram"></div>
-                        </Link>
-                        <Link
-                          href={"https://www.youtube.com/"}
-                          target="_blank"
-                          className="item bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black hover:text-white duration-300">
-                          <div className="icon-youtube"></div>
                         </Link>
                       </div>
                     </div>
@@ -91,7 +80,7 @@ const StoreList = () => {
               </div>
             </div>
           </div>
-          <div className="item bg-surface overflow-hidden rounded-[20px] md:mt-20 mt-10">
+          {/* <div className="item bg-surface overflow-hidden rounded-[20px] md:mt-20 mt-10">
             <div className="flex items-center justify-start relative max-lg:flex-col-reverse">
               <div className="text-content lg:w-1/2 w-full lg:pl-20 lg:pr-[100px] lg:py-14 sm:py-10 py-6 max-lg:px-6">
                 <div className="heading3">Chicago Office</div>
@@ -164,81 +153,7 @@ const StoreList = () => {
                 className="lg:absolute relative top-0 right-0 bottom-0 lg:bottom-0 lg:w-1/2 w-full h-full object-cover"
               />
             </div>
-          </div>
-          <div className="item bg-surface overflow-hidden rounded-[20px] md:mt-20 mt-10">
-            <div className="flex items-center lg:justify-end relative max-lg:flex-col">
-              <Image
-                src={"/images/other/store-list-office3.png"}
-                width={3000}
-                height={2000}
-                alt="bg-img"
-                className="lg:absolute relative top-0 left-0 lg:bottom-0 lg:w-1/2 w-full h-full object-cover"
-              />
-              <div className="text-content lg:w-1/2 lg:pr-20 lg:pl-[100px] lg:py-14 sm:py-10 py-6 max-lg:px-6">
-                <div className="heading3">San Francisco Office</div>
-                <div className="list-featrue lg:mt-10 mt-6">
-                  <div className="item flex lg:gap-10 gap-6">
-                    <div className="w-1/2">
-                      <div className="heading6">Address:</div>
-                      <div className="text-secondary mt-2">
-                        2163 Phillips Gap Rd West Jefferson, North Carolina
-                      </div>
-                    </div>
-                    <div className="w-1/2">
-                      <div className="heading6">Opentime:</div>
-                      <div className="text-secondary mt-2 whitespace-nowrap">
-                        Monay - Friday:
-                      </div>
-                      <div className="text-title text-black whitespace-nowrap">
-                        08:00 - 20:00
-                      </div>
-                      <div className="text-secondary whitespace-nowrap">
-                        Saturday - Sunday:
-                      </div>
-                      <div className="text-title text-black whitespace-nowrap">
-                        10:00 - 18:00
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="list-featrue mt-5">
-                  <div className="item flex lg:gap-10 gap-6">
-                    <div className="w-1/2">
-                      <div className="heading6">Infomation:</div>
-                      <div className="text-secondary mt-2">
-                        +1 666 234 8888
-                        <br />
-                        hi.avitex@gmail.com
-                      </div>
-                    </div>
-                    <div className="w-1/2">
-                      <div className="heading6">Our social media:</div>
-                      <div className="flex items-center sm:gap-4 gap-2 mt-2">
-                        <Link
-                          href={"https://www.facebook.com/"}
-                          target="_blank"
-                          className="item bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black hover:text-white duration-300">
-                          <div className="icon-facebook"></div>
-                        </Link>
-                        <Link
-                          href={"https://www.instagram.com/"}
-                          target="_blank"
-                          className="item bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black hover:text-white duration-300">
-                          <div className="icon-instagram"></div>
-                        </Link>
-                        <Link
-                          href={"https://www.youtube.com/"}
-                          target="_blank"
-                          className="item bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black hover:text-white duration-300">
-                          <div className="icon-youtube"></div>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          </div> */}
         </div>
       </div>
       <Footer />

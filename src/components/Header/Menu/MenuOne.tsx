@@ -243,22 +243,7 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                   </li>
 
                   {/* ── NEW ARRIVALS ────────── */}
-                  <li className="h-full">
-                    <Link
-                      href="#!"
-                      className="text-button-uppercase duration-300 h-full flex items-center justify-center">
-                      New Arrivals
-                    </Link>
-                  </li>
 
-                  {/* ── OFFERS ──────────────── */}
-                  <li className="h-full">
-                    <Link
-                      href="#!"
-                      className="text-button-uppercase duration-300 h-full flex items-center justify-center">
-                      Offers
-                    </Link>
-                  </li>
                 </ul>
               </div>
             </div>
@@ -538,22 +523,7 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                   </li>
 
                   {/* ── NEW ARRIVALS ─── */}
-                  <li>
-                    <Link
-                      href="#!"
-                      className="text-xl font-semibold flex items-center justify-between mt-5">
-                      New Arrivals
-                    </Link>
-                  </li>
-
-                  {/* ── OFFERS ──────── */}
-                  <li>
-                    <Link
-                      href="#!"
-                      className="text-xl font-semibold flex items-center justify-between mt-5">
-                      Offers
-                    </Link>
-                  </li>
+     
                 </ul>
               </div>
             </div>

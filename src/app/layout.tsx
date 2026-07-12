@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <GlobalProvider>
-      <html lang="en">
+      <html lang="en" data-scroll-behavior="smooth">
         <body className={instrument.className}>
           {children}
           <ModalCart />

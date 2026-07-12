@@ -5,8 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
 
 import TopNavOne from "@/components/Header/TopNav/TopNavOne";
 import MenuOne from "@/components/Header/Menu/MenuOne";
@@ -106,46 +104,45 @@ const Compare = () => {
                       </button>
 
                       {/* Image carousel — smaller box, no arrows */}
-                      <Link href={`/product/details?id=${item.id}`}>
-                        <div className="bg-img w-full max-w-[160px] mx-auto aspect-[3/4] rounded-lg overflow-hidden flex-shrink-0 cursor-pointer">
-                          {item.images && item.images.length > 1 ? (
-                            <Swiper
-                              modules={[Pagination, Autoplay]}
-                              pagination={{ clickable: true }}
-                              autoplay={{
-                                delay: 3500,
-                                disableOnInteraction: false,
-                              }}
-                              loop={item.images.length > 1}
-                              className="w-full h-full compare-product-swiper">
-                              {item.images.map((img, i) => (
-                                <SwiperSlide key={i}>
-                                  <Image
-                                    src={img}
-                                    width={1000}
-                                    height={1500}
-                                    alt={`${item.name} image ${i + 1}`}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </SwiperSlide>
-                              ))}
-                            </Swiper>
-                          ) : (
-                            <Image
-                              src={
-                                item.images?.[0] ||
-                                "/images/product/placeholder.png"
-                              }
-                              width={1000}
-                              height={1500}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                            />
-                          )}
-                        </div>
-                      </Link>
 
-                      <Link href={`/product/default?id=${item.id}`}>
+                      <div className="bg-img w-full max-w-[160px] mx-auto aspect-[3/4] rounded-lg overflow-hidden flex-shrink-0 cursor-pointer">
+                        {item.images && item.images.length > 1 ? (
+                          <Swiper
+                            modules={[Pagination, Autoplay]}
+                            pagination={{ clickable: true }}
+                            autoplay={{
+                              delay: 3500,
+                              disableOnInteraction: false,
+                            }}
+                            loop={item.images.length > 1}
+                            className="w-full h-full compare-product-swiper">
+                            {item.images.map((img, i) => (
+                              <SwiperSlide key={i}>
+                                <Image
+                                  src={img}
+                                  width={1000}
+                                  height={1500}
+                                  alt={`${item.name} image ${i + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              </SwiperSlide>
+                            ))}
+                          </Swiper>
+                        ) : (
+                          <Image
+                            src={
+                              item.images?.[0] ||
+                              "/images/product/placeholder.png"
+                            }
+                            width={1000}
+                            height={1500}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+
+                      <Link href={`/product/details?id=${item.id}`}>
                         <div className="text-title text-center mt-3 text-sm hover:underline cursor-pointer">
                           {item.name}
                         </div>

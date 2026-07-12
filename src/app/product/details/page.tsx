@@ -8,9 +8,9 @@ import { productsService, mapToProductType } from "@/services/products";
 export default async function ProductDetails({
   searchParams,
 }: {
-  searchParams: { id?: string };
+  searchParams: Promise<{ id?: string }>;
 }) {
-  const productId = searchParams.id;
+  const { id: productId } = await searchParams;
 
   if (!productId) {
     return <div>Product not found.</div>;

@@ -1,11 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    allowedDevOrigins: [
+        '192.168.1.81',
+    ],
     images: {
+        dangerouslyAllowLocalIP: true,
         remotePatterns: [
             {
                 protocol: 'http',
-                hostname: '192.168.0.107',
+                hostname: '192.168.1.81',
                 port: '8000',
                 pathname: '/storage/**',
             },

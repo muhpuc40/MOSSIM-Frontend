@@ -12,8 +12,7 @@ import { useModalCartContext } from "@/context/ModalCartContext";
 import { useModalWishlistContext } from "@/context/ModalWishlistContext";
 import { useCart } from "@/context/CartContext";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 let _categories: string[] = [];
 let _fetched = false;
@@ -37,7 +36,6 @@ const MenuOne: React.FC<Props> = ({ props }) => {
   const { user, isLoggedIn, logout } = useAuth(); // ✅ moved inside
   const { openLoginPopup, handleLoginPopup } = useLoginPopup();
   const { openMenuMobile, handleMenuMobile } = useMenuMobile();
-  const [openSubNavMobile, setOpenSubNavMobile] = useState<number | null>(null);
   const { openModalCart } = useModalCartContext();
   const { cartState } = useCart();
   const { openModalWishlist } = useModalWishlistContext();
@@ -45,6 +43,7 @@ const MenuOne: React.FC<Props> = ({ props }) => {
   const [fixedHeader, setFixedHeader] = useState(false);
   const [lastScrollPosition, setLastScrollPosition] = useState(0);
   const [categories, setCategories] = useState<string[]>(_categories);
+  const [categoriesLoading, setCategoriesLoading] = useState(!_fetched);
 
   /* ── Sticky on scroll-up ─────────────────── */
   useEffect(() => {
@@ -59,19 +58,38 @@ const MenuOne: React.FC<Props> = ({ props }) => {
 
   /* ── Fetch categories once ───────────────── */
   useEffect(() => {
-    if (_fetched) return;
+    if (_fetched) {
+      setCategories(_categories);
+      setCategoriesLoading(false);
+      return;
+    }
+
+    setCategoriesLoading(true);
+
     fetch(`${API_URL}/products/shop-data`)
-      .then((r) => r.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load categories: ${response.status}`);
+        }
+
+        return response.json();
+      })
       .then((json) => {
-        if (json.success) {
+        if (json.success && Array.isArray(json.data?.categories)) {
           _categories = json.data.categories.map(
-            (c: { name: string }) => c.name,
+            (category: { name: string }) => category.name,
           );
+
           _fetched = true;
           setCategories(_categories);
         }
       })
-      .catch((err) => console.error("menu categories:", err));
+      .catch((error) => {
+        console.error("menu categories:", error);
+      })
+      .finally(() => {
+        setCategoriesLoading(false);
+      });
   }, []);
 
   /* ── Handlers ────────────────────────────── */
@@ -80,12 +98,9 @@ const MenuOne: React.FC<Props> = ({ props }) => {
     router.push(`/search-result?query=${encodeURIComponent(value)}`);
     setSearchKeyword("");
   };
-  const handleTypeClick = (type: string) =>
-    router.push(`/shop?type=${type}`);
+  const handleTypeClick = (type: string) => router.push(`/shop?type=${type}`);
   const handleCategoryClick = (cat: string) =>
     router.push(`/shop?category=${encodeURIComponent(cat)}`);
-  const handleSubNavMobile = (i: number) =>
-    setOpenSubNavMobile((p) => (p === i ? null : i));
 
   return (
     <>
@@ -243,7 +258,6 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                   </li>
 
                   {/* ── NEW ARRIVALS ────────── */}
-
                 </ul>
               </div>
             </div>
@@ -337,14 +351,13 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                           </Link>
                         </div>
                         <div className="bottom mt-4 pt-4 border-t border-line" />
-<Link 
-  href="https://wa.me/8801322447700?text=I%20need%20help" 
-  target="_blank"
-  rel="noopener noreferrer"
-  className="body1 hover:underline"
->
-  Support
-</Link>
+                        <Link
+                          href="https://wa.me/8801322447700?text=I%20need%20help"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="body1 hover:underline">
+                          Support
+                        </Link>
                       </div>
                     </div>
                   )}
@@ -416,115 +429,105 @@ const MenuOne: React.FC<Props> = ({ props }) => {
                   }
                 />
               </div>
+              <div
+                className="list-nav mobile-shop-direct mt-6 overflow-y-auto pb-24"
+                style={{ maxHeight: "calc(100vh - 140px)" }}>
+                {/* Shop heading */}
+                <div className="flex items-center justify-between mb-5">
+                  <div className="text-xl font-semibold">Shop</div>
 
-              <div className="list-nav mt-6">
-                <ul>
-                  {/* ── SHOP mobile ──── */}
-                  <li className={`${openSubNavMobile === 1 ? "open" : ""}`}>
-                    <div
-                      className="text-xl font-semibold flex items-center justify-between mt-5 cursor-pointer"
-                      onClick={() => handleSubNavMobile(1)}>
-                      Shop
-                      <Icon.CaretRight size={20} />
-                    </div>
-                    <div className="sub-nav-mobile">
+                  <Link
+                    href="/shop"
+                    onClick={handleMenuMobile}
+                    className="view-all-btn link text-secondary"
+                    style={{ fontSize: "14px" }}>
+                    View All
+                  </Link>
+                </div>
+
+                {/* Types */}
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    marginBottom: "8px",
+                    color: "#1a1a1a",
+                  }}>
+                  Type
+                </div>
+
+                <ul className="grid grid-cols-2 gap-y-1 mb-6">
+                  {TYPES.map((type) => (
+                    <li key={type.value}>
                       <div
-                        className="back-btn flex items-center gap-3 cursor-pointer"
-                        onClick={() => handleSubNavMobile(1)}>
-                        <Icon.CaretLeft /> Back
+                        onClick={() => {
+                          handleTypeClick(type.value);
+                          handleMenuMobile();
+                        }}
+                        className="link text-secondary duration-300 cursor-pointer capitalize hover:text-black"
+                        style={{
+                          padding: "7px 0",
+                          fontSize: "15px",
+                        }}>
+                        {type.label}
                       </div>
-                      <div className="list-nav-item w-full pt-4 pb-12">
-                        <div
-                          style={{
-                            fontWeight: 700,
-                            fontSize: "14px",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                            marginBottom: "8px",
-                            color: "#1a1a1a",
-                          }}>
-                          Type
-                        </div>
-                        <ul className="grid grid-cols-2 gap-y-1 mb-5">
-                          {TYPES.map((t) => (
-                            <li key={t.value}>
-                              <div
-                                onClick={() => {
-                                  handleTypeClick(t.value);
-                                  handleMenuMobile();
-                                }}
-                                className="link text-secondary duration-300 cursor-pointer capitalize"
-                                style={{ padding: "6px 0", fontSize: "15px" }}>
-                                {t.label}
-                              </div>
-                            </li>
-                          ))}
-                          <li>
-                            <Link
-                              href="/shop"
-                              onClick={handleMenuMobile}
-                              className="view-all-btn link text-secondary"
-                              style={{
-                                padding: "6px 0",
-                                fontSize: "15px",
-                                display: "block",
-                              }}>
-                              View All
-                            </Link>
-                          </li>
-                        </ul>
-
-                        <div
-                          style={{
-                            fontWeight: 700,
-                            fontSize: "14px",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                            marginBottom: "8px",
-                            color: "#1a1a1a",
-                          }}>
-                          Category
-                        </div>
-                        {categories.length === 0 ? (
-                          <div className="grid grid-cols-2 gap-2">
-                            {Array.from({ length: 6 }).map((_, i) => (
-                              <div
-                                key={i}
-                                style={{
-                                  height: "14px",
-                                  background: "#f5f5f5",
-                                  borderRadius: "4px",
-                                }}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <ul className="grid grid-cols-2 gap-y-0">
-                            {categories.map((cat) => (
-                              <li key={cat}>
-                                <div
-                                  onClick={() => {
-                                    handleCategoryClick(cat);
-                                    handleMenuMobile();
-                                  }}
-                                  className="link text-secondary duration-300 cursor-pointer"
-                                  style={{
-                                    padding: "6px 0",
-                                    fontSize: "15px",
-                                  }}>
-                                  {cat}
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-
-                  {/* ── NEW ARRIVALS ─── */}
-     
+                    </li>
+                  ))}
                 </ul>
+
+                {/* Categories */}
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    marginBottom: "8px",
+                    color: "#1a1a1a",
+                  }}>
+                  Category
+                </div>
+
+                {categoriesLoading ? (
+                  <div
+                    className="text-secondary"
+                    style={{
+                      padding: "7px 0",
+                      fontSize: "14px",
+                    }}>
+                    Loading categories...
+                  </div>
+                ) : categories.length > 0 ? (
+                  <ul className="grid grid-cols-2 gap-y-0">
+                    {categories.map((category) => (
+                      <li key={category}>
+                        <div
+                          onClick={() => {
+                            handleCategoryClick(category);
+                            handleMenuMobile();
+                          }}
+                          className="link text-secondary duration-300 cursor-pointer hover:text-black"
+                          style={{
+                            padding: "7px 0",
+                            fontSize: "15px",
+                          }}>
+                          {category}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div
+                    className="text-secondary"
+                    style={{
+                      padding: "7px 0",
+                      fontSize: "14px",
+                    }}>
+                    No categories available
+                  </div>
+                )}
               </div>
             </div>
           </div>

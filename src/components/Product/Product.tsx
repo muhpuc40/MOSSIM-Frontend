@@ -42,10 +42,10 @@ const Product: React.FC<ProductProps> = ({ data, type, style }) => {
   const handleActiveColor = (item: string) => setActiveColor(item);
   const handleActiveSize = (item: string) => setActiveSize(item);
 
-const handleAddToCart = () => {
-    quickAdd(data)
-    openModalCart()
-}
+  const handleAddToCart = () => {
+    quickAdd(data);
+    openModalCart();
+  };
   const handleAddToWishlist = () => {
     if (wishlistState.wishlistArray.some((item) => item.id === data.id)) {
       removeFromWishlist(data.id);

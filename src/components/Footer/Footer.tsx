@@ -41,7 +41,7 @@ const Footer = () => {
                     </Link>
                     <Link
                       className="caption1 has-line-before duration-300 w-fit pt-2"
-                      href={"/pages/about"}>
+                      href={"/about-us"}>
                       About Us
                     </Link>
                     <Link

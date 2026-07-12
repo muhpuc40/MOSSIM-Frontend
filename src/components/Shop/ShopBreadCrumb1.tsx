@@ -69,7 +69,7 @@ const ShopBreadCrumb1: React.FC<Props> = ({
           min: Math.floor(initialShopData.price_range.min),
           max: Math.ceil(initialShopData.price_range.max),
         }
-      : { min: 0, max: 10000 }
+      : { min: 0, max: 10000 },
   );
   const [currentPage, setCurrentPage] = useState(0);
   const [layoutCol, setLayoutCol] = useState(3);
@@ -79,10 +79,10 @@ const ShopBreadCrumb1: React.FC<Props> = ({
   /* ── Data state — pre-filled from server, so NO loading on first paint ── */
   const [shopData] = useState<ShopData | null>(initialShopData ?? null);
   const [products, setProducts] = useState<ProductType[]>(
-    initialProducts ? initialProducts.map(mapToProductType) : []
+    initialProducts ? initialProducts.map(mapToProductType) : [],
   );
   const [pageMeta, setPageMeta] = useState<PaginationMeta | null>(
-    initialMeta ?? null
+    initialMeta ?? null,
   );
   const [loading, setLoading] = useState(false);
   const filtersLoading = !initialShopData;
@@ -384,9 +384,7 @@ const ShopBreadCrumb1: React.FC<Props> = ({
                     ) : (
                       <>
                         {totalProducts}
-                        <span className="text-secondary pl-1">
-                          Products Found
-                        </span>
+                        <span className="pl-1">Products</span>
                       </>
                     )}
                   </div>

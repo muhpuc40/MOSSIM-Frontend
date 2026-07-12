@@ -2,14 +2,14 @@
 const nextConfig = {
     reactStrictMode: true,
     allowedDevOrigins: [
-        '192.168.1.81',
+        '192.168.0.56',
     ],
     images: {
         dangerouslyAllowLocalIP: true,
         remotePatterns: [
             {
                 protocol: 'http',
-                hostname: '192.168.1.81',
+                hostname: '192.168.0.56',
                 port: '8000',
                 pathname: '/storage/**',
             },

@@ -544,7 +544,7 @@ const MenuOne: React.FC<Props> = ({ props }) => {
             <span className="menu_bar-title caption2 font-semibold">Home</span>
           </Link>
           <Link
-            href="/shop/breadcrumb1"
+            href="/shop"
             className="menu_bar-link flex flex-col items-center gap-1">
             <Icon.List weight="bold" className="text-2xl" />
             <span className="menu_bar-title caption2 font-semibold">Shop</span>

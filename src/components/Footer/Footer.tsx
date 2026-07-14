@@ -109,7 +109,7 @@ const Footer = () => {
                     </Link>
                     <Link
                       className="caption1 has-line-before duration-300 w-fit pt-2"
-                      href={"/order-tracking"}>
+                      href={"/return-refund"}>
                       Return & Refund
                     </Link>
                   </div>
@@ -117,8 +117,7 @@ const Footer = () => {
                 <div className="newsletter basis-1/3 pl-7 max-md:basis-full max-md:pl-0">
                   <div className="text-button-uppercase">Newletter</div>
                   <div className="caption1 mt-3">
-                    Sign up for our newsletter and get your first
-                    purchase
+                    Sign up for our newsletter and get your first purchase
                   </div>
                   <div className="input-block w-full h-[52px] mt-4">
                     <form className="w-full h-full relative" action="post">
@@ -134,7 +133,9 @@ const Footer = () => {
                     </form>
                   </div>
                   <div className="list-social flex items-center gap-6 mt-4">
-                    <Link href={"https://www.facebook.com/mossimbd"} target="_blank">
+                    <Link
+                      href={"https://www.facebook.com/mossimbd"}
+                      target="_blank">
                       <div className="icon-facebook text-2xl text-black"></div>
                     </Link>
                     <Link
@@ -142,11 +143,10 @@ const Footer = () => {
                       target="_blank">
                       <div className="icon-instagram text-2xl text-black"></div>
                     </Link>
-                    <Link 
-                      href={"https://wa.me/8801322447700"} 
+                    <Link
+                      href={"https://wa.me/8801322447700"}
                       target="_blank"
-                      aria-label="Chat on WhatsApp"
-                    >
+                      aria-label="Chat on WhatsApp">
                       <Icon.WhatsappLogo size={24} color="#000000" />
                     </Link>
                   </div>

@@ -44,6 +44,33 @@ export const authService = {
         return json
     },
 
+    forgotPassword: async (login: string): Promise<{ success: boolean; message: string }> => {
+        const res = await fetch(`${API_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: jsonHeaders(),
+            body: JSON.stringify({ login }),
+        })
+        const json = await res.json()
+        if (!res.ok) throw json
+        return json
+    },
+
+    resetPassword: async (data: {
+        email: string
+        token: string
+        password: string
+        password_confirmation: string
+    }): Promise<{ success: boolean; message: string }> => {
+        const res = await fetch(`${API_URL}/auth/reset-password`, {
+            method: 'POST',
+            headers: jsonHeaders(),
+            body: JSON.stringify(data),
+        })
+        const json = await res.json()
+        if (!res.ok) throw json
+        return json
+    },
+
     me: async (token: string): Promise<Customer> => {
         const res = await fetch(`${API_URL}/auth/me`, {
             headers: authHeaders(token),

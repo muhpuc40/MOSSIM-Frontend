@@ -15,19 +15,27 @@ interface Props {
 
 type ReturnSelection = { selected: boolean; qty: number };
 
-const ReturnRequestPanel: React.FC<Props> = ({ orderId, token, onSubmitted, onClose }) => {
+const ReturnRequestPanel: React.FC<Props> = ({
+  orderId,
+  token,
+  onSubmitted,
+  onClose,
+}) => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [selections, setSelections] = useState<Record<string, ReturnSelection>>({});
+  const [selections, setSelections] = useState<Record<string, ReturnSelection>>(
+    {},
+  );
   const [reason, setReason] = useState("");
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    ordersService.show(token, orderId)
+    ordersService
+      .show(token, orderId)
       .then((data) => {
         if (!mounted) return;
         setOrder(data);
@@ -38,8 +46,12 @@ const ReturnRequestPanel: React.FC<Props> = ({ orderId, token, onSubmitted, onCl
         setSelections(init);
       })
       .catch((err) => setError(err?.message || "Failed to load order."))
-      .finally(() => { if (mounted) setLoading(false); });
-    return () => { mounted = false; };
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
   }, [orderId, token]);
 
   const toggleItem = (id: string) => {
@@ -69,11 +81,17 @@ const ReturnRequestPanel: React.FC<Props> = ({ orderId, token, onSubmitted, onCl
 
     if (items.length === 0) return setError("Please select at least one item.");
     if (!reason.trim()) return setError("Please provide a reason.");
-    if (reason.trim().length < 10) return setError("Reason must be at least 10 characters.");
+    if (reason.trim().length < 10)
+      return setError("Reason must be at least 10 characters.");
 
-    setError(""); setSuccess(""); setSubmitting(true);
+    setError("");
+    setSuccess("");
+    setSubmitting(true);
     try {
-      const { successful, failed } = await returnsService.requestMultiple(token, items);
+      const { successful, failed } = await returnsService.requestMultiple(
+        token,
+        items,
+      );
       if (failed.length === 0) {
         setSuccess(`${successful.length} return(s) submitted successfully.`);
         setTimeout(() => onSubmitted(), 2000);
@@ -121,17 +139,30 @@ const ReturnRequestPanel: React.FC<Props> = ({ orderId, token, onSubmitted, onCl
 
       <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg caption2 text-orange-700">
         <Icon.Info size={16} className="inline mr-1" />
-        Returns are accepted within 14 days of delivery.
+        Returns are accepted within 3 days of delivery.
       </div>
 
-      {error && <div className="p-3 bg-red/5 border border-red/20 rounded-lg caption1 text-red">{error}</div>}
-      {success && <div className="p-3 bg-green/5 border border-green/20 rounded-lg caption1 text-success">{success}</div>}
+      {error && (
+        <div className="p-3 bg-red/5 border border-red/20 rounded-lg caption1 text-red">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="p-3 bg-green/5 border border-green/20 rounded-lg caption1 text-success">
+          {success}
+        </div>
+      )}
 
       <div>
-        <div className="caption2 text-secondary font-semibold uppercase mb-3">Select items to return</div>
+        <div className="caption2 text-secondary font-semibold uppercase mb-3">
+          Select items to return
+        </div>
         <div className="space-y-3">
           {order.items?.map((item: any) => {
-            const sel = selections[item.id] || { selected: false, qty: item.qty };
+            const sel = selections[item.id] || {
+              selected: false,
+              qty: item.qty,
+            };
             return (
               <div
                 key={item.id}
@@ -155,11 +186,20 @@ const ReturnRequestPanel: React.FC<Props> = ({ orderId, token, onSubmitted, onCl
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="text-button text-sm line-clamp-1">{item.product?.name}</div>
+                    <div className="text-button text-sm line-clamp-1">
+                      {item.product?.name}
+                    </div>
                     <div className="caption2 text-secondary mt-0.5">
-                      {item.variant?.color?.name && <span className="capitalize">{item.variant.color.name}</span>}
-                      {item.variant?.color?.name && item.variant?.size?.name && <span> / </span>}
-                      {item.variant?.size?.name && <span>{item.variant.size.name}</span>}
+                      {item.variant?.color?.name && (
+                        <span className="capitalize">
+                          {item.variant.color.name}
+                        </span>
+                      )}
+                      {item.variant?.color?.name &&
+                        item.variant?.size?.name && <span> / </span>}
+                      {item.variant?.size?.name && (
+                        <span>{item.variant.size.name}</span>
+                      )}
                     </div>
                     <div className="caption2 text-secondary mt-0.5">
                       Ordered: {item.qty} × ৳{item.unit_price.toLocaleString()}
@@ -167,12 +207,16 @@ const ReturnRequestPanel: React.FC<Props> = ({ orderId, token, onSubmitted, onCl
 
                     {sel.selected && (
                       <div className="mt-3 flex items-center gap-3">
-                        <span className="caption2 text-secondary">Return qty:</span>
+                        <span className="caption2 text-secondary">
+                          Return qty:
+                        </span>
                         <div className="flex items-center border border-line rounded-lg overflow-hidden">
                           <button
                             type="button"
                             className="w-8 h-8 flex items-center justify-center hover:bg-black hover:text-white duration-200 disabled:opacity-30"
-                            onClick={() => updateQty(item.id, sel.qty - 1, item.qty)}
+                            onClick={() =>
+                              updateQty(item.id, sel.qty - 1, item.qty)
+                            }
                             disabled={sel.qty <= 1 || submitting}>
                             <Icon.Minus size={12} />
                           </button>
@@ -182,12 +226,16 @@ const ReturnRequestPanel: React.FC<Props> = ({ orderId, token, onSubmitted, onCl
                           <button
                             type="button"
                             className="w-8 h-8 flex items-center justify-center hover:bg-black hover:text-white duration-200 disabled:opacity-30"
-                            onClick={() => updateQty(item.id, sel.qty + 1, item.qty)}
+                            onClick={() =>
+                              updateQty(item.id, sel.qty + 1, item.qty)
+                            }
                             disabled={sel.qty >= item.qty || submitting}>
                             <Icon.Plus size={12} />
                           </button>
                         </div>
-                        <span className="caption2 text-secondary">(max {item.qty})</span>
+                        <span className="caption2 text-secondary">
+                          (max {item.qty})
+                        </span>
                       </div>
                     )}
                   </div>
@@ -210,7 +258,9 @@ const ReturnRequestPanel: React.FC<Props> = ({ orderId, token, onSubmitted, onCl
           onChange={(e) => setReason(e.target.value)}
           disabled={submitting}
         />
-        <div className="caption2 text-secondary mt-1 text-right">{reason.length} characters</div>
+        <div className="caption2 text-secondary mt-1 text-right">
+          {reason.length} characters
+        </div>
       </div>
 
       <div className="flex gap-3 pt-2">

@@ -55,18 +55,22 @@ const WhatNewOne: React.FC<Props> = ({ start = 0, limit = 16 }) => {
       <div className="container">
         <div className="heading flex flex-col items-center text-center">
           <div className="heading3">What{String.raw`'s`} new</div>
-          <div className="menu-tab flex items-center gap-2 p-1 bg-surface rounded-2xl mt-6 overflow-x-auto">
+          <div className="menu-tab flex flex-wrap items-center justify-center gap-2 p-1 bg-surface rounded-2xl mt-6 w-fit mx-auto">
             {TABS.map((tab) => (
               <div
                 key={tab.key}
-                className={`tab-item relative text-secondary text-button-uppercase py-2 px-5 cursor-pointer duration-500 hover:text-black whitespace-nowrap ${activeTab === tab.key ? "active" : ""}`}
+                className={`tab-item relative text-center text-secondary text-button-uppercase py-2 px-3 cursor-pointer duration-500 hover:text-black whitespace-nowrap ${
+                  activeTab === tab.key ? "active" : ""
+                }`}
                 onClick={() => setActiveTab(tab.key)}>
                 {activeTab === tab.key && (
                   <motion.div
                     layoutId="active-pill"
-                    className="absolute inset-0 rounded-2xl bg-white"></motion.div>
+                    className="absolute inset-0 rounded-2xl bg-white"
+                  />
                 )}
-                <span className="relative text-button-uppercase z-[1]">
+
+                <span className="relative z-[1] text-button-uppercase">
                   {tab.label}
                 </span>
               </div>

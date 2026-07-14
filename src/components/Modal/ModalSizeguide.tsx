@@ -1,179 +1,209 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
+import React, { useState } from "react";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
-import { ProductType } from '@/type/ProductType'
-import Slider from 'rc-slider';
-import 'rc-slider/assets/index.css'
+import { ProductType } from "@/type/ProductType";
+import Slider from "rc-slider";
+import "rc-slider/assets/index.css";
 
 interface Props {
-    data: ProductType | null;
-    isOpen: boolean;
-    onClose: () => void;
+  data: ProductType | null;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const ModalSizeguide: React.FC<Props> = ({ data, isOpen, onClose }) => {
-    const [activeSize, setActiveSize] = useState<string>('')
-    const [totalInches, setTotalInches] = useState<number>(66) // default 5'6" = 66 inches
-    const [weightRange, setWeightRange] = useState<{ min: number; max: number }>({ min: 30, max: 90 });
+  const [activeSize, setActiveSize] = useState<string>("");
+  const [totalInches, setTotalInches] = useState<number>(66);
+  const [weight, setWeight] = useState<number>(60);
 
-    // Derived feet & inches from totalInches
-    const heightFeet = Math.floor(totalInches / 12)
-    const heightInches = totalInches % 12
+  // Convert total inches into feet and inches
+  const heightFeet = Math.floor(totalInches / 12);
+  const heightInches = totalInches % 12;
 
-    const calculateSize = (inches: number, weight: number) => {
-        // 1 inch = 2.54 cm
-        const heightCm = inches * 2.54
+  const calculateSize = (inches: number, currentWeight: number) => {
+    const heightCm = inches * 2.54;
 
-        if (heightCm > 180 || weight > 70) {
-            setActiveSize('2XL');
-        } else if (heightCm > 170 || weight > 60) {
-            setActiveSize('XL');
-        } else if (heightCm > 160 || weight > 50) {
-            setActiveSize('L');
-        } else if (heightCm > 155 || weight > 45) {
-            setActiveSize('M');
-        } else if (heightCm > 150 || weight > 40) {
-            setActiveSize('S');
-        } else {
-            setActiveSize('XS');
-        }
-    };
+    if (heightCm > 180 || currentWeight > 70) {
+      setActiveSize("2XL");
+    } else if (heightCm > 170 || currentWeight > 60) {
+      setActiveSize("XL");
+    } else if (heightCm > 160 || currentWeight > 50) {
+      setActiveSize("L");
+    } else if (heightCm > 155 || currentWeight > 45) {
+      setActiveSize("M");
+    } else if (heightCm > 150 || currentWeight > 40) {
+      setActiveSize("S");
+    } else {
+      setActiveSize("XS");
+    }
+  };
 
-    const handleHeightChange = (values: number | number[]) => {
-        const val = Array.isArray(values) ? values[0] : values
-        setTotalInches(val)
-        calculateSize(val, weightRange.max)
-    };
+  const handleHeightChange = (values: number | number[]) => {
+    const value = Array.isArray(values) ? values[0] : values;
 
-    const handleWeightChange = (values: number | number[]) => {
-        if (Array.isArray(values)) {
-            setWeightRange({ min: values[0], max: values[1] });
-            calculateSize(totalInches, values[1])
-        }
-    };
+    setTotalInches(value);
+    calculateSize(value, weight);
+  };
 
-    return (
-        <>
-            <div className={`modal-sizeguide-block`} onClick={onClose}>
-                <div
-                    className={`modal-sizeguide-main md:p-10 p-6 rounded-[32px] ${isOpen ? 'open' : ''}`}
-                    onClick={(e) => { e.stopPropagation() }}
-                >
-                    <div
-                        className="close-btn absolute right-5 top-5 w-6 h-6 rounded-full bg-surface flex items-center justify-center duration-300 cursor-pointer hover:bg-black hover:text-white"
-                        onClick={onClose}
-                    >
-                        <Icon.X size={14} />
-                    </div>
+  const handleWeightChange = (values: number | number[]) => {
+    const value = Array.isArray(values) ? values[0] : values;
 
-                    <div className="heading3">MOSSIM Size guide</div>
+    setWeight(value);
+    calculateSize(totalInches, value);
+  };
 
-                    <div className="md:mt-8 mt-6 progress">
+  return (
+    <div className="modal-sizeguide-block" onClick={onClose}>
+      <div
+        className={`modal-sizeguide-main relative w-[94vw] max-w-[900px] max-h-[85vh] overflow-y-auto md:p-8 p-5 rounded-[32px] ${
+          isOpen ? "open" : ""
+        }`}
+        onClick={(event) => event.stopPropagation()}>
+        {/* Close button */}
+        <button
+          type="button"
+          aria-label="Close size guide"
+          className="close-btn absolute right-5 top-5 z-10 w-6 h-6 rounded-full bg-surface flex items-center justify-center duration-300 cursor-pointer hover:bg-black hover:text-white"
+          onClick={onClose}>
+          <Icon.X size={14} />
+        </button>
 
-                        {/* Height — single slider in inches, displayed as ft + in */}
-                        <div className="flex md:items-center gap-10 justify-between max-md:flex-col gap-y-5 max-md:pr-3">
-                            <div className="flex items-center flex-shrink-0 gap-8">
-                                <span className='flex-shrink-0 md:w-14'>Height</span>
-                                <div className="flex items-center justify-center w-32 gap-1 py-2 border border-line rounded-lg flex-shrink-0">
-                                    <span>{heightFeet}</span>
-                                    <span className='caption1 text-secondary'>ft</span>
-                                    <span className='ml-1'>{heightInches}</span>
-                                    <span className='caption1 text-secondary'>in</span>
-                                </div>
-                            </div>
-                            <Slider
-                                min={36}    // 3'0"
-                                max={84}    // 7'0"
-                                defaultValue={66}
-                                value={totalInches}
-                                onChange={handleHeightChange}
-                            />
-                        </div>
+        <div className="grid md:grid-cols-2 grid-cols-1 md:gap-10 gap-7">
+          {/* Left side */}
+          <div className="md:pr-2">
+            <div className="heading3 pr-10">MOSSIM Size Guide</div>
 
-                        {/* Weight — max 150 kg */}
-                        <div className="flex md:items-center gap-10 justify-between max-md:flex-col gap-y-5 max-md:pr-3 mt-5">
-                            <div className="flex items-center gap-8 flex-shrink-0">
-                                <span className='flex-shrink-0 md:w-14'>Weight</span>
-                                <div className="flex items-center justify-center w-20 gap-1 py-2 border border-line rounded-lg flex-shrink-0">
-                                    <span>{weightRange.max}</span>
-                                    <span className='caption1 text-secondary'>Kg</span>
-                                </div>
-                            </div>
-                            <Slider
-                                range
-                                defaultValue={[30, 90]}
-                                min={30}
-                                max={150}
-                                onChange={handleWeightChange}
-                            />
-                        </div>
-                    </div>
+            <div className="md:mt-8 mt-6 progress">
+              {/* Height */}
+              <div>
+                <div className="flex items-center gap-8">
+                  <span className="flex-shrink-0 w-14">Height</span>
 
-                    <div className="heading6 mt-8">suggests for you:</div>
-                    <div className="list-size flex items-center gap-2 flex-wrap mt-3">
-                        {data?.sizes.map((item, index) => (
-                            <div
-                                className={`size-item w-12 h-12 flex items-center justify-center text-button rounded-full bg-white border border-line ${activeSize === item ? 'active' : ''}`}
-                                key={index}
-                            >
-                                {item}
-                            </div>
-                        ))}
-                    </div>
+                  <div className="flex items-center justify-center w-32 gap-1 py-2 border border-line rounded-lg flex-shrink-0">
+                    <span>{heightFeet}</span>
+                    <span className="caption1 text-secondary">ft</span>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Size</th>
-                                <th>Bust</th>
-                                <th>Waist</th>
-                                <th>Low Hip</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>XS</td>
-                                <td>32</td>
-                                <td>24-25</td>
-                                <td>33-34</td>
-                            </tr>
-                            <tr>
-                                <td>S</td>
-                                <td>34-35</td>
-                                <td>26-27</td>
-                                <td>35-36</td>
-                            </tr>
-                            <tr>
-                                <td>M</td>
-                                <td>36-37</td>
-                                <td>28-29</td>
-                                <td>38-40</td>
-                            </tr>
-                            <tr>
-                                <td>L</td>
-                                <td>38-39</td>
-                                <td>30-31</td>
-                                <td>42-44</td>
-                            </tr>
-                            <tr>
-                                <td>XL</td>
-                                <td>40-41</td>
-                                <td>32-33</td>
-                                <td>45-47</td>
-                            </tr>
-                            <tr>
-                                <td>2XL</td>
-                                <td>42-43</td>
-                                <td>34-35</td>
-                                <td>48-50</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <span className="ml-1">{heightInches}</span>
+                    <span className="caption1 text-secondary">in</span>
+                  </div>
                 </div>
-            </div>
-        </>
-    )
-}
 
-export default ModalSizeguide
+                <div className="mt-5 px-1">
+                  <Slider
+                    min={36}
+                    max={84}
+                    value={totalInches}
+                    onChange={handleHeightChange}
+                  />
+                </div>
+              </div>
+
+              {/* Weight */}
+              <div className="mt-7">
+                <div className="flex items-center gap-8">
+                  <span className="flex-shrink-0 w-14">Weight</span>
+
+                  <div className="flex items-center justify-center w-32 gap-1 py-2 border border-line rounded-lg flex-shrink-0">
+                    <span>{weight}</span>
+                    <span className="caption1 text-secondary">Kg</span>
+                  </div>
+                </div>
+
+                <div className="mt-5 px-1">
+                  <Slider
+                    min={30}
+                    max={150}
+                    value={weight}
+                    onChange={handleWeightChange}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Suggested size */}
+            <div className="heading6 mt-8">Suggested size for you:</div>
+
+            <div className="list-size flex items-center gap-2 flex-wrap mt-3">
+              {data?.sizes?.map((item, index) => (
+                <button
+                  type="button"
+                  className={`size-item w-12 h-12 flex items-center justify-center text-button rounded-full bg-white border border-line ${
+                    activeSize === item ? "active" : ""
+                  }`}
+                  key={`${item}-${index}`}
+                  onClick={() => setActiveSize(item)}>
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Right side: Size table */}
+          <div className="md:border-l md:border-line md:pl-10">
+            <div className="heading5 mb-5">Size Chart</div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th>Size</th>
+                    <th>Bust</th>
+                    <th>Waist</th>
+                    <th>Low Hip</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr className={activeSize === "XS" ? "bg-surface" : ""}>
+                    <td>XS</td>
+                    <td>32</td>
+                    <td>24-25</td>
+                    <td>33-34</td>
+                  </tr>
+
+                  <tr className={activeSize === "S" ? "bg-surface" : ""}>
+                    <td>S</td>
+                    <td>34-35</td>
+                    <td>26-27</td>
+                    <td>35-36</td>
+                  </tr>
+
+                  <tr className={activeSize === "M" ? "bg-surface" : ""}>
+                    <td>M</td>
+                    <td>36-37</td>
+                    <td>28-29</td>
+                    <td>38-40</td>
+                  </tr>
+
+                  <tr className={activeSize === "L" ? "bg-surface" : ""}>
+                    <td>L</td>
+                    <td>38-39</td>
+                    <td>30-31</td>
+                    <td>42-44</td>
+                  </tr>
+
+                  <tr className={activeSize === "XL" ? "bg-surface" : ""}>
+                    <td>XL</td>
+                    <td>40-41</td>
+                    <td>32-33</td>
+                    <td>45-47</td>
+                  </tr>
+
+                  <tr className={activeSize === "2XL" ? "bg-surface" : ""}>
+                    <td>2XL</td>
+                    <td>42-43</td>
+                    <td>34-35</td>
+                    <td>48-50</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ModalSizeguide;

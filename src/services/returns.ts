@@ -24,7 +24,7 @@ export const returnsService = {
     token: string,
     payload: ReturnRequestPayload
   ): Promise<ReturnResponse> => {
-    const res = await fetch(`${API_URL}/customer/returns`, {
+    const res = await fetch(`${API_URL}/returns`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

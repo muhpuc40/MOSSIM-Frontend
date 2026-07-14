@@ -9,150 +9,102 @@ import Breadcrumb from "@/components/Breadcrumb/Breadcrumb";
 import Footer from "@/components/Footer/Footer";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 
+const profile = {
+  name: "Minhaj Uddin Hassan",
+  role: "Software Engineer",
+  education:
+    "Bachelor of Science (Engineering) in Computer Science and Engineering",
+  avatar: "/images/developers/minhaj.webp",
+  introduction:
+    "Responsible for the design, development, integration and technical implementation of the MOSSIM platform, with a focus on performance, usability, maintainability and a reliable customer experience.",
+  portfolio: "https://muhpuc40.github.io/Minhaj-Uddin-Hassan/",
+  linkedin: "https://www.linkedin.com/in/minhajuddinhassan/",
+};
 const Developers = () => {
-  const profile = {
-    name: "Minhaj Uddin Hassan",
-    title:
-      "Bachelor of Science (Engineering) in Computer Science and Engineering",
-    avatar: "/images/developers/minhaj.webp",
-    bio: "Software Engineer",
-    socials: [
-      {
-        label: "Portfolio",
-        value: "muhpuc40.github.io/Minhaj-Uddin-Hassan",
-        href: "https://muhpuc40.github.io/Minhaj-Uddin-Hassan/",
-        icon: Icon.Globe,
-        bgColor: "#2563eb",
-        hoverBg: "#1d4ed8",
-      },
-      {
-        label: "LinkedIn",
-        value: "linkedin.com/in/minhajuddinhassan",
-        href: "https://www.linkedin.com/in/minhajuddinhassan/",
-        icon: Icon.LinkedinLogo,
-        bgColor: "#0a66c2",
-        hoverBg: "#004182",
-      },
-    ],
-  };
-
   return (
     <>
       <TopNavOne props="style-one bg-black" />
+
       <div id="header" className="relative w-full">
         <MenuOne props="bg-transparent" />
         <Breadcrumb heading="Developer" subHeading="Developer" />
       </div>
 
-      <div className="developer-page md:py-20 py-10">
+      <main className="developer-page md:py-10 py-0">
         <div className="container">
-          <div className="max-w-5xl mx-auto">
-            <div className="profile-card p-8 md:p-12 rounded-3xl border border-line bg-white">
-              {/* ── Two column layout ── */}
-              <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-                {/* ── LEFT: Profile ── */}
-                <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                  {/* Avatar - Increased size */}
-                  <div className="avatar relative w-56 h-56 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-line shadow-xl flex-shrink-0">
-                    <Image
-                      src={profile.avatar}
-                      alt={profile.name}
-                      fill
-                      sizes="(max-width: 768px) 224px, 256px"
-                      className="object-cover"
-                      priority
-                    />
-                  </div>
+          <div className="max-w-[1100px] mx-auto">
+            <section className="mt-0 rounded-[30px] border border-line bg-white overflow-hidden">
+              <div className="grid lg:grid-cols-[360px_1fr]">
+                <div className="bg-surface p-8 md:p-10 flex items-center justify-center">
+                  <div className="w-full text-center">
+                    <div className="relative w-56 h-56 mx-auto rounded-full overflow-hidden border-4 border-white shadow-lg">
+                      <Image
+                        src={profile.avatar}
+                        alt={profile.name}
+                        fill
+                        sizes="224px"
+                        className="object-cover"
+                        priority
+                      />
+                    </div>
 
-                  {/* Name + title */}
-                  <div className="heading3 mt-6">{profile.name}</div>
-                  <div className="caption1 text-secondary mt-3 max-w-xl">
-                    {profile.title}
-                  </div>
-
-                  {/* Bio */}
-                  <div className="body1 text-secondary2 mt-6 max-w-2xl leading-relaxed">
-                    {profile.bio}
+                    <div className="heading4 mt-6">{profile.name}</div>
+                    <div className="text-button text-secondary mt-2">
+                      {profile.role}
+                    </div>
                   </div>
                 </div>
 
-                {/* ── RIGHT: Connect With Me ── */}
-                <div className="flex flex-col justify-center">
-                  <div className="heading5 text-center md:text-left">
-                    Connect With Me
+                <div className="p-8 md:p-12 flex flex-col justify-center">
+                  <div className="caption1 uppercase tracking-[0.16em] text-secondary">
+                    Professional Profile
+                  </div>
+                  <div className="heading3 mt-3">
+                    Building Reliable Digital Experiences
+                  </div>
+                  <div className="body1 text-secondary mt-5 leading-relaxed">
+                    {profile.introduction}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-                    {profile.socials.map((social, index) => {
-                      const SocialIcon = social.icon;
-                      return (
-                        <Link
-                          key={index}
-                          href={social.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="social-item flex items-center gap-4 p-4 rounded-xl border border-line bg-white transition-all duration-300 hover:shadow-lg"
-                          style={{
-                            backgroundColor: "#fff",
-                            color: social.bgColor,
-                            borderColor: "#e5e7eb",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              social.bgColor;
-                            e.currentTarget.style.color = "#fff";
-                            e.currentTarget.style.borderColor = social.bgColor;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "#fff";
-                            e.currentTarget.style.color = social.bgColor;
-                            e.currentTarget.style.borderColor = "#e5e7eb";
-                          }}>
-                          <div
-                            className="icon-wrapper w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300"
-                            style={{
-                              backgroundColor: social.bgColor,
-                              color: "#fff",
-                            }}
-                            onMouseEnter={(e) => {
-                              // Icon background becomes white on hover
-                              e.currentTarget.style.backgroundColor = "#fff";
-                              e.currentTarget.style.color = social.bgColor;
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                social.bgColor;
-                              e.currentTarget.style.color = "#fff";
-                            }}>
-                            <SocialIcon size={24} weight="bold" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div
-                              className="caption2 uppercase opacity-70"
-                              style={{ color: "inherit" }}>
-                              {social.label}
-                            </div>
-                            <div
-                              className="text-button truncate text-sm"
-                              style={{ color: "inherit" }}>
-                              {social.value}
-                            </div>
-                          </div>
-                          <Icon.ArrowUpRight
-                            size={18}
-                            weight="bold"
-                            className="flex-shrink-0 opacity-50 transition-all duration-300"
-                          />
-                        </Link>
-                      );
-                    })}
+                  <div className="mt-7 pt-7 border-t border-line">
+                    <div className="flex items-start gap-4">
+                      <div className="w-11 h-11 rounded-full bg-surface flex items-center justify-center shrink-0">
+                        <Icon.GraduationCap size={24} />
+                      </div>
+                      <div>
+                        <div className="text-button">Academic Background</div>
+                        <div className="body2 text-secondary mt-1">
+                          {profile.education}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 mt-8">
+                    <Link
+                      href={profile.portfolio}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="button-main inline-flex items-center gap-2">
+                      View Portfolio
+                      <Icon.ArrowUpRight size={18} weight="bold" />
+                    </Link>
+
+                    <Link
+                      href={profile.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-black text-button hover:bg-black hover:text-white duration-300">
+                      <Icon.LinkedinLogo size={20} weight="fill" />
+                      LinkedIn Profile
+                    </Link>
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
           </div>
         </div>
-      </div>
+      </main>
 
       <Footer />
     </>

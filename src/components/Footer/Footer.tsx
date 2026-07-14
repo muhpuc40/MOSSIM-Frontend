@@ -94,12 +94,12 @@ const Footer = () => {
                     </div>
                     <Link
                       className="caption1 has-line-before duration-300 w-fit"
-                      href={"/pages/faqs"}>
+                      href={"/faqs"}>
                       Orders FAQs
                     </Link>
                     <Link
                       className="caption1 has-line-before duration-300 w-fit pt-2"
-                      href={"/pages/store-list"}>
+                      href={"/store-list"}>
                       Store List
                     </Link>
                     <Link

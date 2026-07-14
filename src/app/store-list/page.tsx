@@ -20,7 +20,7 @@ const StoreList = () => {
           <div className="item bg-surface overflow-hidden rounded-[20px]">
             <div className="flex items-center lg:justify-end relative max-lg:flex-col">
               <Image
-                src={"/images/other/store-list-office1.png"}
+                src={"/images/other/store-list-1.jpeg"}
                 width={3000}
                 height={2000}
                 alt="bg-img"
@@ -40,7 +40,7 @@ const StoreList = () => {
                     <div className="w-1/2">
                       <div className="heading6">Opentime:</div>
                       <div className="text-secondary mt-2 whitespace-nowrap">
-                        Saturday - thursday:
+                        Saturday - Thursday:
                       </div>
                       <div className="text-title text-black whitespace-nowrap">
                         10:00 AM - 06:00 PM

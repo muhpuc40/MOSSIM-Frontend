@@ -18,7 +18,7 @@ const PageNotFound = () => {
         <div className="container">
           <div className="flex items-center justify-between max-sm:flex-col gap-y-8">
             <Image
-              src={"/images/other/404-img.png"}
+              src={"/images/other/not-found.png"}
               width={2000}
               height={2000}
               alt="bg-img"

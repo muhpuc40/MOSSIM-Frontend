@@ -55,11 +55,11 @@ const WhatNewOne: React.FC<Props> = ({ start = 0, limit = 16 }) => {
       <div className="container">
         <div className="heading flex flex-col items-center text-center">
           <div className="heading3">What{String.raw`'s`} new</div>
-          <div className="menu-tab flex flex-wrap items-center justify-center gap-2 p-1 bg-surface rounded-2xl mt-6 w-fit mx-auto">
+          <div className="menu-tab grid grid-cols-5 md:flex md:flex-wrap items-center justify-center gap-1 md:gap-2 p-1 bg-surface rounded-2xl mt-6 w-full md:w-fit mx-auto overflow-visible">
             {TABS.map((tab) => (
               <div
                 key={tab.key}
-                className={`tab-item relative text-center text-secondary text-button-uppercase py-2 px-3 cursor-pointer duration-500 hover:text-black whitespace-nowrap ${
+                className={`tab-item relative text-center text-secondary text-button-uppercase py-2 px-1 md:px-3 cursor-pointer duration-500 hover:text-black whitespace-nowrap ${
                   activeTab === tab.key ? "active" : ""
                 }`}
                 onClick={() => setActiveTab(tab.key)}>

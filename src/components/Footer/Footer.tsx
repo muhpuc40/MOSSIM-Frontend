@@ -9,7 +9,7 @@ const Footer = () => {
       <div id="footer" className="footer">
         <div className="footer-main bg-surface">
           <div className="container">
-            <div className="content-footer py-[60px] flex justify-between flex-wrap gap-y-8">
+            <div className="content-footer md:py-[60px] pt-10 pb-3 flex justify-between flex-wrap gap-y-8">
               <div className="company-infor basis-1/4 max-lg:basis-full pr-7">
                 <Link href={"/"} className="logo">
                   <div className="heading4">MOSSIM</div>
@@ -36,7 +36,7 @@ const Footer = () => {
                     <div className="text-button-uppercase pb-3">Infomation</div>
                     <Link
                       className="caption1 has-line-before duration-300 w-fit"
-                      href={"/pages/contact"}>
+                      href={"/contact"}>
                       Contact us
                     </Link>
                     <Link
@@ -132,7 +132,7 @@ const Footer = () => {
                       </button>
                     </form>
                   </div>
-                  <div className="list-social flex items-center gap-6 mt-4">
+                  <div className="list-social flex items-center justify-center md:justify-start gap-3 mt-3 w-full">
                     <Link
                       href={"https://www.facebook.com/mossimbd"}
                       target="_blank">
@@ -153,7 +153,7 @@ const Footer = () => {
                 </div>
               </div>
             </div>
-            <div className="footer-bottom py-3 flex items-center justify-between gap-5 max-lg:justify-center max-lg:flex-col border-t border-line">
+            <div className="footer-bottom pt-3 pb-20 md:pb-3 flex items-center justify-between gap-2 max-lg:justify-center max-lg:flex-col border-t border-line">
               <div className="left flex items-center gap-8">
                 <div className="copyright caption1 text-secondary">
                   © 2026 MOSSIM All Rights Reserved

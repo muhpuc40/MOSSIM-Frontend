@@ -24,6 +24,7 @@ import {
   getDefaultVariant,
   ApiProduct,
 } from "@/services/products";
+import { shareProduct } from "@/utils/shareProduct";
 
 interface Props {
   data: Array<ProductType>;
@@ -36,6 +37,7 @@ const Default: React.FC<Props> = ({ productId }) => {
   const [activeColor, setActiveColor] = useState<string>("");
   const [activeSize, setActiveSize] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
+  const [shareMessage, setShareMessage] = useState("");
 
   const [detail, setDetail] = useState<ApiProduct | null>(null);
   const [related, setRelated] = useState<ProductType[]>([]);
@@ -195,6 +197,29 @@ const Default: React.FC<Props> = ({ productId }) => {
       alert("Compare up to 3 products");
     }
     openModalCompare();
+  };
+
+  const handleShareProduct = async () => {
+    if (!productMain || !detail) return;
+
+    const result = await shareProduct({
+      id: detail.id,
+      name: detail.name,
+      type: detail.type,
+      description: detail.description,
+    });
+
+    if (result === "copied") {
+      setShareMessage("Link copied");
+    } else if (result === "failed") {
+      setShareMessage("Unable to share");
+    } else {
+      setShareMessage("");
+    }
+
+    if (result === "copied" || result === "failed") {
+      window.setTimeout(() => setShareMessage(""), 2500);
+    }
   };
 
   const handleIncreaseQuantity = () => setQuantity((q) => q + 1);
@@ -417,12 +442,22 @@ const Default: React.FC<Props> = ({ productId }) => {
                     </div>
                     <span>Compare</span>
                   </div>
-                  <div className="share flex items-center gap-3 cursor-pointer">
-                    <div className="share-btn md:w-12 md:h-12 w-10 h-10 flex items-center justify-center border border-line cursor-pointer rounded-xl duration-300 hover:bg-black hover:text-white">
+                  <button
+                    type="button"
+                    onClick={() => void handleShareProduct()}
+                    className="share flex items-center gap-3 cursor-pointer text-left">
+                    <span className="share-btn md:w-12 md:h-12 w-10 h-10 flex items-center justify-center border border-line rounded-xl duration-300 hover:bg-black hover:text-white">
                       <Icon.ShareNetwork weight="fill" className="heading6" />
-                    </div>
-                    <span>Share Products</span>
-                  </div>
+                    </span>
+                    <span className="flex flex-col items-start">
+                      <span>Share Product</span>
+                      {shareMessage && (
+                        <span className="caption2 text-secondary">
+                          {shareMessage}
+                        </span>
+                      )}
+                    </span>
+                  </button>
                 </div>
 
                 <div className="more-infor mt-6">

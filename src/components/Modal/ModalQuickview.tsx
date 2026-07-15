@@ -13,6 +13,7 @@ import { useModalCompareContext } from "@/context/ModalCompareContext";
 import ModalSizeguide from "./ModalSizeguide";
 import Link from "next/link";
 import { getProductVariants, getDefaultVariant } from "@/services/products";
+import { shareProduct } from "@/utils/shareProduct";
 
 const ModalQuickview = () => {
   const { selectedProduct, closeQuickview } = useModalQuickviewContext();
@@ -20,6 +21,7 @@ const ModalQuickview = () => {
   const [activeColor, setActiveColor] = useState<string>("");
   const [activeSize, setActiveSize] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
+  const [shareMessage, setShareMessage] = useState("");
 
   const { addToCart } = useCart();
   const { openModalCart } = useModalCartContext();
@@ -144,6 +146,29 @@ const ModalQuickview = () => {
       alert("Compare up to 3 products");
     }
     openModalCompare();
+  };
+
+  const handleShareProduct = async () => {
+    if (!selectedProduct) return;
+
+    const result = await shareProduct({
+      id: selectedProduct.id,
+      name: selectedProduct.name,
+      type: selectedProduct.type,
+      description: selectedProduct.description,
+    });
+
+    if (result === "copied") {
+      setShareMessage("Link copied");
+    } else if (result === "failed") {
+      setShareMessage("Unable to share");
+    } else {
+      setShareMessage("");
+    }
+
+    if (result === "copied" || result === "failed") {
+      window.setTimeout(() => setShareMessage(""), 2500);
+    }
   };
 
   const handleIncreaseQuantity = () => setQuantity((q) => q + 1);
@@ -335,12 +360,25 @@ const ModalQuickview = () => {
                       </div>
                       <span>Compare</span>
                     </div>
-                    <div className="share flex items-center gap-3 cursor-pointer">
-                      <div className="share-btn md:w-12 md:h-12 w-10 h-10 flex items-center justify-center border border-line cursor-pointer rounded-xl duration-300 hover:bg-black hover:text-white">
+                    <button
+                      type="button"
+                      className="share flex items-center gap-3 cursor-pointer text-left"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleShareProduct();
+                      }}>
+                      <span className="share-btn md:w-12 md:h-12 w-10 h-10 flex items-center justify-center border border-line rounded-xl duration-300 hover:bg-black hover:text-white">
                         <Icon.ShareNetwork weight="fill" className="heading6" />
-                      </div>
-                      <span>Share Products</span>
-                    </div>
+                      </span>
+                      <span className="flex flex-col items-start">
+                        <span>Share Product</span>
+                        {shareMessage && (
+                          <span className="caption2 text-secondary">
+                            {shareMessage}
+                          </span>
+                        )}
+                      </span>
+                    </button>
                   </div>
                 </div>
               </div>

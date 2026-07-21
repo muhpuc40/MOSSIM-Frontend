@@ -35,7 +35,7 @@ export const metadata: Metadata = {
       "Shop premium Panjabi, Kurta, three-piece suits and coordinated family fashion for men, women and kids at MOSSIM Bangladesh.",
     images: [
       {
-        url: "https://mossim.net/images/social-mossim.png",
+        url: "https://mossim.net/images/mossim.svg",
         width: 1200,
         height: 630,
         alt: "MOSSIM premium traditional fashion",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: "MOSSIM | Premium Traditional Fashion in Bangladesh",
     description:
       "Shop premium Panjabi, Kurta, three-piece suits and coordinated family fashion for men, women and kids at MOSSIM Bangladesh.",
-    images: ["https://mossim.net/images/social-mossim.png"],
+    images: ["https://mossim.net/images/mossim.svg"],
   },
   robots: {
     index: true,

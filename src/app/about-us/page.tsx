@@ -21,9 +21,7 @@ const AboutUs = () => {
           <div className="container">
             <div className="text flex items-center justify-center">
               <div className="content md:w-5/6 w-full">
-                <div className="heading3 text-center">
-Mossim Display Shop
-                </div>
+                <div className="heading3 text-center">Mossim Display Shop</div>
                 <div className="body1 text-center md:mt-7 mt-5">
                   We offers premium traditional fashion for men, women, kids,
                   and babies. We specialize in elegant Panjabi, Kurta, 3-piece
@@ -37,25 +35,7 @@ Mossim Display Shop
             <div className="list-img grid sm:grid-cols-3 gap-[30px] md:pt-20 pt-10">
               <div className="bg-img">
                 <Image
-                  src={"/images/other/about-us1.png"}
-                  width={2000}
-                  height={3000}
-                  alt="bg-img"
-                  className="w-full rounded-[30px]"
-                />
-              </div>
-              <div className="bg-img">
-                <Image
-                  src={"/images/other/about-us2.png"}
-                  width={2000}
-                  height={3000}
-                  alt="bg-img"
-                  className="w-full rounded-[30px]"
-                />
-              </div>
-              <div className="bg-img">
-                <Image
-                  src={"/images/other/about-us3.png"}
+                  src={"/images/mossim.png"}
                   width={2000}
                   height={3000}
                   alt="bg-img"

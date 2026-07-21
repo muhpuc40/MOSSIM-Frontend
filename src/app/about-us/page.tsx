@@ -32,14 +32,15 @@ const AboutUs = () => {
                 </div>
               </div>
             </div>
-            <div className="list-img grid sm:grid-cols-3 gap-[30px] md:pt-20 pt-10">
-              <div className="bg-img">
+            <div className="flex justify-center md:pt-20 pt-10">
+              <div className="w-full max-w-[350px]">
                 <Image
-                  src={"/images/mossim.png"}
-                  width={2000}
-                  height={3000}
-                  alt="bg-img"
-                  className="w-full rounded-[30px]"
+                  src="/images/mossim.png"
+                  width={1000}
+                  height={1000}
+                  alt="MOSSIM logo"
+                  className="w-full h-auto object-contain"
+                  priority
                 />
               </div>
             </div>

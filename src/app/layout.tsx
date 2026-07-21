@@ -7,12 +7,8 @@ import ModalWishlist from "@/components/Modal/ModalWishlist";
 import ModalSearch from "@/components/Modal/ModalSearch";
 import ModalQuickview from "@/components/Modal/ModalQuickview";
 import ModalCompare from "@/components/Modal/ModalCompare";
-import CountdownTimeType from "@/type/CountdownType";
-import { countdownTime } from "@/store/countdownTime";
 import { Suspense } from "react";
 import MetaPixel from "@/components/Analytics/MetaPixel";
-
-const serverTimeLeft: CountdownTimeType = countdownTime();
 
 const instrument = Instrument_Sans({ subsets: ["latin"] });
 
@@ -39,7 +35,7 @@ export const metadata: Metadata = {
       "Shop premium Panjabi, Kurta, three-piece suits and coordinated family fashion for men, women and kids at MOSSIM Bangladesh.",
     images: [
       {
-        url: "/social-mossim.png",
+        url: "https://mossim.net/images/social-mossim.png",
         width: 1200,
         height: 630,
         alt: "MOSSIM premium traditional fashion",
@@ -51,7 +47,7 @@ export const metadata: Metadata = {
     title: "MOSSIM | Premium Traditional Fashion in Bangladesh",
     description:
       "Shop premium Panjabi, Kurta, three-piece suits and coordinated family fashion for men, women and kids at MOSSIM Bangladesh.",
-    images: ["/social-mossim.png"],
+    images: ["https://mossim.net/images/social-mossim.png"],
   },
   robots: {
     index: true,

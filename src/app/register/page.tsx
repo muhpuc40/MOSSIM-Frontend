@@ -17,6 +17,8 @@ const Register = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -103,25 +105,53 @@ const Register = () => {
                     required
                   />
                 </div>
-                <div className="pass mt-5">
+                <div className="pass mt-5 relative">
                   <input
-                    className="border-line px-4 pt-3 pb-3 w-full rounded-lg"
-                    type="password"
+                    className="border-line px-4 pt-3 pb-3 pr-12 w-full rounded-lg"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Password * (min 8 characters)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-black"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }>
+                    {showPassword ? (
+                      <Icon.EyeSlash size={20} />
+                    ) : (
+                      <Icon.Eye size={20} />
+                    )}
+                  </button>
                 </div>
-                <div className="confirm-pass mt-5">
+                <div className="confirm-pass mt-5 relative">
                   <input
-                    className="border-line px-4 pt-3 pb-3 w-full rounded-lg"
-                    type="password"
+                    className="border-line px-4 pt-3 pb-3 pr-12 w-full rounded-lg"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm Password *"
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-black"
+                    aria-label={
+                      showConfirmPassword
+                        ? "Hide confirm password"
+                        : "Show confirm password"
+                    }>
+                    {showConfirmPassword ? (
+                      <Icon.EyeSlash size={20} />
+                    ) : (
+                      <Icon.Eye size={20} />
+                    )}
+                  </button>
                 </div>
                 <div className="flex items-center mt-5">
                   <div className="block-input">
@@ -142,7 +172,9 @@ const Register = () => {
                     htmlFor="remember"
                     className="pl-2 cursor-pointer text-secondary2">
                     I agree to the
-                    <Link href="#!" className="text-black hover:underline pl-1">
+                    <Link
+                      href="/terms-of-use"
+                      className="text-black hover:underline pl-1">
                       Terms of Use
                     </Link>
                   </label>

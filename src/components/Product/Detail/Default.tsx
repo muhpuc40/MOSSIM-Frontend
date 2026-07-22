@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ProductType } from "@/type/ProductType";
 import Product from "../Product";
 import Rate from "@/components/Other/Rate";
@@ -32,6 +33,7 @@ interface Props {
 }
 
 const Default: React.FC<Props> = ({ productId }) => {
+  const router = useRouter();
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [openSizeGuide, setOpenSizeGuide] = useState(false);
   const [activeColor, setActiveColor] = useState<string>("");
@@ -173,6 +175,35 @@ const Default: React.FC<Props> = ({ productId }) => {
         selectedVariant.price?.actual_price ?? productMain.originPrice,
     });
     openModalCart();
+  };
+
+  const handleBuyNow = () => {
+    if (!productMain || !detail) return;
+    if (!activeColor) {
+      alert("Please select a color");
+      return;
+    }
+    if (!activeSize) {
+      alert("Please select a size");
+      return;
+    }
+    if (!selectedVariant) {
+      alert("This combination is unavailable");
+      return;
+    }
+    addToCart({
+      ...productMain,
+      quantity,
+      selectedColor: activeColor,
+      selectedSize: activeSize,
+      variant_id: selectedVariant.id,
+      variant_sku: selectedVariant.sku,
+      price: selectedVariant.price?.current_price ?? productMain.price,
+      originPrice:
+        selectedVariant.price?.actual_price ?? productMain.originPrice,
+    });
+
+    router.push("/checkout");
   };
 
   const handleAddToWishlist = () => {
@@ -425,9 +456,12 @@ const Default: React.FC<Props> = ({ productId }) => {
                 </div>
 
                 <div className="button-block mt-5">
-                  <div className="button-main w-full text-center">
+                  <button
+                    type="button"
+                    onClick={handleBuyNow}
+                    className="button-main w-full text-center">
                     Buy It Now
-                  </div>
+                  </button>
                 </div>
 
                 <div className="flex items-center lg:gap-20 gap-8 mt-5 pb-6 border-b border-line">

@@ -11,11 +11,12 @@ import { useModalWishlistContext } from "@/context/ModalWishlistContext";
 import { useCompare } from "@/context/CompareContext";
 import { useModalCompareContext } from "@/context/ModalCompareContext";
 import ModalSizeguide from "./ModalSizeguide";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getProductVariants, getDefaultVariant } from "@/services/products";
 import { shareProduct } from "@/utils/shareProduct";
 
 const ModalQuickview = () => {
+  const router = useRouter();
   const { selectedProduct, closeQuickview } = useModalQuickviewContext();
   const [openSizeGuide, setOpenSizeGuide] = useState(false);
   const [activeColor, setActiveColor] = useState<string>("");
@@ -122,6 +123,36 @@ const ModalQuickview = () => {
     });
     openModalCart();
     closeQuickview();
+  };
+
+  const handleBuyNow = () => {
+    if (!selectedProduct) return;
+    if (!activeColor) {
+      alert("Please select a color");
+      return;
+    }
+    if (!activeSize) {
+      alert("Please select a size");
+      return;
+    }
+    if (!selectedVariant) {
+      alert("This combination is unavailable");
+      return;
+    }
+    addToCart({
+      ...selectedProduct,
+      quantity,
+      selectedColor: activeColor,
+      selectedSize: activeSize,
+      variant_id: selectedVariant.id,
+      variant_sku: selectedVariant.sku,
+      price: selectedVariant.price?.current_price ?? selectedProduct.price,
+      originPrice:
+        selectedVariant.price?.actual_price ?? selectedProduct.originPrice,
+    });
+
+    closeQuickview();
+    router.push("/checkout");
   };
 
   const handleAddToWishlist = () => {
@@ -344,11 +375,12 @@ const ModalQuickview = () => {
                   </div>
 
                   <div className="button-block mt-5">
-                    <Link
-                      href="/checkout"
+                    <button
+                      type="button"
+                      onClick={handleBuyNow}
                       className="button-main w-full text-center">
                       Buy It Now
-                    </Link>
+                    </button>
                   </div>
 
                   <div className="flex items-center flex-wrap lg:gap-20 gap-8 gap-y-4 mt-5">

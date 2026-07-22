@@ -98,22 +98,22 @@ const TermsOfUsePage = () => {
         <Breadcrumb heading="Terms of Use" subHeading="Terms of Use" />
       </div>
 
-      <div className="md:py-20 py-10">
+      <div className="md:pt-8 md:pb-20 pt-5 pb-10">
         <div className="container">
           <div className="max-w-[1100px] mx-auto">
             <div className="text-center max-w-[760px] mx-auto">
-              <div className="heading3">Terms of Use</div>
-              <div className="body1 text-secondary mt-4">
+              <div className="body1 text-secondary">
                 These terms explain the rules that apply when you use the
-                <span className="text-title font-semibold"> MOSSIM</span>
+                <span className="text-title font-semibold"> MOSSIM</span>{" "}
                 website, create an account, or purchase our products.
               </div>
-              <div className="caption1 text-secondary mt-3">
+
+              <div className="caption1 text-secondary mt-1">
                 Effective Date: July 22, 2026
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-5 mt-10">
+            <div className="grid md:grid-cols-3 gap-5 mt-7">
               {highlights.map((item, index) => (
                 <div
                   key={index}
@@ -121,7 +121,9 @@ const TermsOfUsePage = () => {
                   <div className="w-12 h-12 rounded-full bg-white border border-line flex items-center justify-center">
                     {item.icon}
                   </div>
+
                   <div className="heading6 mt-4">{item.title}</div>
+
                   <div className="body2 text-secondary mt-2">{item.desc}</div>
                 </div>
               ))}
@@ -134,6 +136,7 @@ const TermsOfUsePage = () => {
                     key={index}
                     className="rounded-[24px] border border-line px-7 py-6 bg-white">
                     <div className="heading5">{section.title}</div>
+
                     <div className="body1 text-secondary mt-3">
                       {section.content}
                     </div>
@@ -144,20 +147,25 @@ const TermsOfUsePage = () => {
               <div className="flex flex-col gap-5">
                 <div className="rounded-[24px] border border-line bg-surface px-7 py-6">
                   <div className="heading5">Your Responsibilities</div>
+
                   <ul className="mt-4 flex flex-col gap-3">
                     <li className="body1 text-secondary flex items-start gap-3">
                       <Icon.CheckCircle size={20} className="mt-1 shrink-0" />
                       Provide correct account and delivery information
                     </li>
+
                     <li className="body1 text-secondary flex items-start gap-3">
                       <Icon.CheckCircle size={20} className="mt-1 shrink-0" />
                       Keep your password and account secure
                     </li>
+
                     <li className="body1 text-secondary flex items-start gap-3">
                       <Icon.CheckCircle size={20} className="mt-1 shrink-0" />
                       Review product and policy information before ordering
                     </li>
+
                     <li className="body1 text-secondary flex items-start gap-3">
+                      <Icon.CheckCircle size={20} className="mt-1 shrink-0" />
                       Use our website only for lawful purposes
                     </li>
                   </ul>
@@ -165,21 +173,29 @@ const TermsOfUsePage = () => {
 
                 <div className="rounded-[24px] border border-line bg-black text-white px-7 py-6">
                   <div className="heading5">Questions About These Terms?</div>
+
                   <div className="body2 text-white/80 mt-3">
                     Contact our support team for help with account, order, or
                     policy-related questions.
                   </div>
+
                   <div className="mt-5 flex flex-col gap-3">
                     <div className="flex items-start gap-3">
                       <Icon.PhoneCall size={20} className="mt-1 shrink-0" />
                       <span className="body2">+88 01322-447700</span>
                     </div>
+
                     <div className="flex items-start gap-3">
-                      <Icon.EnvelopeSimple size={20} className="mt-1 shrink-0" />
+                      <Icon.EnvelopeSimple
+                        size={20}
+                        className="mt-1 shrink-0"
+                      />
                       <span className="body2">info@mossim.net</span>
                     </div>
+
                     <div className="flex items-start gap-3">
                       <Icon.MapPin size={20} className="mt-1 shrink-0" />
+
                       <span className="body2">
                         01 (Kha), Block #A, House No. 14, Road No. 2/Ka/A,
                         Chattogram 4203
@@ -192,6 +208,7 @@ const TermsOfUsePage = () => {
 
             <div className="rounded-[24px] border border-line bg-surface px-7 py-6 mt-8">
               <div className="heading6">Agreement</div>
+
               <div className="body1 text-secondary mt-3">
                 By continuing to use MOSSIM, registering an account, or placing
                 an order, you confirm that you have read and accepted these

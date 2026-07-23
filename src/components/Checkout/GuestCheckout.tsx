@@ -10,6 +10,7 @@ import Footer from "@/components/Footer/Footer";
 import { useCart } from "@/context/CartContext";
 import { ordersService, resolveCartItems } from "@/services/orders";
 import type { CouponResult } from "@/type/Order";
+import ModalPaymentInfo from "@/components/Modal/ModalPaymentInfo";
 
 const SHIP_INSIDE = 80;
 const SHIP_OUTSIDE = 120;
@@ -87,6 +88,7 @@ const GuestCheckout = () => {
 
   /* ── Payment + note ──────────────────── */
   const [note, setNote] = useState("");
+  const [isPaymentInfoOpen, setIsPaymentInfoOpen] = useState(false);
 
   /* ── Submit ──────────────────────────── */
   const [submitting, setSubmitting] = useState(false);
@@ -245,6 +247,21 @@ const GuestCheckout = () => {
                 />
               </div>
 
+              {/* Payment information */}
+              <div className="mb-8">
+                <div className="heading5 mb-3">Payment Information</div>
+                <button
+                  type="button"
+                  onClick={() => setIsPaymentInfoOpen(true)}
+                  className="w-full p-4 border border-line rounded-xl text-left duration-200 hover:border-black hover:bg-surface"
+                >
+                  <div className="text-button">View Payment Info</div>
+                  <div className="caption1 text-secondary mt-1">
+                    See bKash, Nagad, QR code, and bank transfer details.
+                  </div>
+                </button>
+              </div>
+
               {/* Note */}
               <div className="heading5 mb-3">
                 Order Note{" "}
@@ -369,7 +386,7 @@ const GuestCheckout = () => {
                     {/* Shipping selection */}
                     <div className="border-t border-line pt-3">
                       <div className="caption1 text-secondary mb-2">
-                        Delivery Location
+                        Home Delivery Location
                       </div>
                       <div className="space-y-2">
                         <label
@@ -465,6 +482,11 @@ const GuestCheckout = () => {
           </div>
         </div>
       </div>
+
+      <ModalPaymentInfo
+        isOpen={isPaymentInfoOpen}
+        onClose={() => setIsPaymentInfoOpen(false)}
+      />
 
       <Footer />
     </>

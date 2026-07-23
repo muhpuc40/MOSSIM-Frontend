@@ -56,6 +56,11 @@ const Footer = () => {
                     </Link>
                     <Link
                       className="caption1 has-line-before duration-300 w-fit pt-2"
+                      href={"/payment-info"}>
+                      Payment Info
+                    </Link>
+                    <Link
+                      className="caption1 has-line-before duration-300 w-fit pt-2"
                       href={"/developers"}>
                       Developers
                     </Link>
@@ -111,6 +116,11 @@ const Footer = () => {
                       className="caption1 has-line-before duration-300 w-fit pt-2"
                       href={"/return-refund"}>
                       Return & Refund
+                    </Link>
+                    <Link
+                      className="caption1 has-line-before duration-300 w-fit pt-2"
+                      href={"/terms-of-use"}>
+                      Terms of Use
                     </Link>
                   </div>
                 </div>

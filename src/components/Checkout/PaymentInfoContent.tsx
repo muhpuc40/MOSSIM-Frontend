@@ -65,7 +65,7 @@ const PaymentInfoContent = () => {
             </div>
           </div>
 
-          <div className="mt-6 flex justify-center">
+          {/* <div className="mt-6 flex justify-center">
             <div className="relative sm:w-[260px] w-[220px] aspect-square rounded-2xl overflow-hidden border border-line bg-white p-3">
               <Image
                 src="/images/payment/qr.png"
@@ -76,7 +76,7 @@ const PaymentInfoContent = () => {
                 priority
               />
             </div>
-          </div>
+          </div> */}
 
           <button
             type="button"

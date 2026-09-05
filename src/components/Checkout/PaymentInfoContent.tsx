@@ -4,15 +4,15 @@ import React, { useState } from "react";
 import Image from "next/image";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 
-const MFS_NUMBER = "01XXXXXXXXX";
+const MFS_NUMBER = "01737280617";
 
 const BANK_DETAILS = {
-  bankName: "Example Bank Limited",
-  accountName: "MOSSIM",
-  accountNumber: "0000000000000",
-  branchName: "Example Branch",
-  routingNumber: "000000000",
-  swiftCode: "EXAMPLEBD",
+  bankName: "Eastern bank Ltd.",
+  accountName: "Hossan murad",
+  accountNumber: "0011010030350",
+  branchName: "Agrabad. Ctg.",
+  routingNumber: "095150136",
+  swiftCode: "EBLDBDDH003",
 };
 
 const PaymentInfoContent = () => {

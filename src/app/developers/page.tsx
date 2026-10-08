@@ -17,7 +17,7 @@ const profile = {
   avatar: "/images/developers/minhaj.webp",
   introduction:
     "Responsible for the design, development, integration and technical implementation of the MOSSIM platform, with a focus on performance, usability, maintainability and a reliable customer experience.",
-  portfolio: "https://muhpuc40.github.io/Minhaj-Uddin-Hassan/",
+  portfolio: "https://minhaj.tech/",
   linkedin: "https://www.linkedin.com/in/minhajuddinhassan/",
 };
 const Developers = () => {

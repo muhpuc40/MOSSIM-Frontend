@@ -48,7 +48,7 @@ export async function generateMetadata({
 
   try {
     const product = await productsService.show(id);
-    const title = `${product.name} | MOSSIM`;
+    const title = `${product.name}`;
     const description =
       cleanText(product.description).slice(0, 200) ||
       `Shop ${product.name} from MOSSIM ${product.type} collection.`;

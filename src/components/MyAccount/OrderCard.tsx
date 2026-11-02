@@ -38,6 +38,9 @@ const OrderCard: React.FC<Props> = ({ order, expandedPanel, onTogglePanel, token
             <span className={`caption2 px-3 py-0.5 rounded-full font-semibold ${STATUS_STYLE[order.status] ?? "bg-surface text-secondary"}`}>
               {order.status_label}
             </span>
+            {order.order_type === "custom" && (
+              <span className="caption2 px-3 py-0.5 rounded-full font-semibold bg-black text-white">Custom</span>
+            )}
           </div>
           <div className="caption2 text-secondary mt-1">
             {new Date(order.placed_at).toLocaleDateString("en-BD", {
@@ -48,11 +51,17 @@ const OrderCard: React.FC<Props> = ({ order, expandedPanel, onTogglePanel, token
               minute: "2-digit",
             })}
             &nbsp;·&nbsp;
-            {order.item_count} item{order.item_count !== 1 ? "s" : ""}
+            {order.order_type === "custom"
+              ? "Made to measure"
+              : `${order.item_count} item${order.item_count !== 1 ? "s" : ""}`}
           </div>
         </div>
         <div className="text-right">
-          <div className="heading6">৳{order.total_amount.toLocaleString()}</div>
+          {order.price_pending ? (
+            <div className="caption1 font-semibold text-secondary">Price pending</div>
+          ) : (
+            <div className="heading6">৳{order.total_amount.toLocaleString()}</div>
+          )}
         </div>
       </div>
 
@@ -70,7 +79,7 @@ const OrderCard: React.FC<Props> = ({ order, expandedPanel, onTogglePanel, token
             {cancelling ? "Cancelling..." : "Cancel Order"}
           </button>
         )}
-        {order.status === "delivered" && (
+        {order.status === "delivered" && order.order_type !== "custom" && (
           <button
             className="caption1 px-4 py-2 border rounded-lg duration-200 font-semibold"
             onClick={() => onTogglePanel("return")}

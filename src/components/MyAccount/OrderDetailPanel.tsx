@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
-import { Order } from "@/type/Order";
+import { Order, CustomOrderDetails } from "@/type/Order";
 import { ordersService } from "@/services/orders";
 import { STATUS_STYLE } from "./constants";
 
@@ -152,8 +152,12 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
   return (
     <div className="mt-3 border border-line rounded-xl overflow-hidden">
       <div className="grid md:grid-cols-2 gap-6 p-6">
-        {/* LEFT — Items */}
+        {/* LEFT — Items (or custom measurements) */}
         <div>
+          {order.order_type === "custom" && order.custom_details ? (
+            <CustomDetails d={order.custom_details} pricePending={!!order.price_pending} />
+          ) : (
+          <>
           <div className="caption2 text-secondary font-semibold uppercase mb-3">
             Order Items ({order.items?.length || 0})
           </div>
@@ -193,6 +197,8 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
             </div>
           ) : (
             <div className="caption1 text-secondary py-6 text-center">No items.</div>
+          )}
+          </>
           )}
         </div>
 
@@ -250,8 +256,8 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
             <div className="caption2 text-secondary font-semibold uppercase mb-2">Payment Summary</div>
             <div className="p-4 bg-surface rounded-xl space-y-2">
               <div className="flex justify-between caption1">
-                <span className="text-secondary">Subtotal</span>
-                <span>৳{order.subtotal.toLocaleString()}</span>
+                <span className="text-secondary">{order.order_type === "custom" ? "Agreed price" : "Subtotal"}</span>
+                <span>{order.price_pending ? "To be confirmed" : `৳${order.subtotal.toLocaleString()}`}</span>
               </div>
               {order.discount_amount > 0 && (
                 <div className="flex justify-between caption1">
@@ -412,3 +418,53 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
 };
 
 export default OrderDetailPanel;
+
+/* ── Custom order measurements ───────────────── */
+const MEASURE_LABELS: Record<string, string> = {
+  chest: "Chest", shoulder: "Shoulder", waist: "Waist", sleeve_length: "Sleeve Length", arm_hole: "Arm Hole",
+  hip: "Hip", thigh: "Thigh", front_rise: "Front Rise", back_rise: "Back Rise",
+};
+
+function CustomDetails({ d, pricePending }: { d: CustomOrderDetails; pricePending: boolean }) {
+  const unit = d.measurement_unit === "inch" ? "in" : "cm";
+  return (
+    <div>
+      <div className="caption2 text-secondary font-semibold uppercase mb-3">Custom Order</div>
+      <div className="p-4 border border-line rounded-xl mb-3">
+        <div className="text-button">{d.summary}</div>
+        <div className="caption2 text-secondary mt-1">
+          Height {d.height_label}
+          {d.preferred_delivery_date &&
+            ` · Preferred delivery ${new Date(d.preferred_delivery_date).toLocaleDateString("en-BD", { year: "numeric", month: "short", day: "numeric" })}`}
+        </div>
+        {pricePending && (
+          <div className="caption2 mt-2 inline-block px-2 py-0.5 rounded bg-surface font-semibold">
+            Our team will call you to confirm the price
+          </div>
+        )}
+      </div>
+      <div className="border border-line rounded-xl divide-y divide-line mb-3">
+        {Object.entries(d.measurements).map(([k, val]) => (
+          <div key={k} className="flex justify-between px-4 py-2 caption1">
+            <span className="text-secondary">{MEASURE_LABELS[k] ?? k}</span>
+            <span className="font-semibold">{val ?? "–"} <span className="text-secondary font-normal">{unit}</span></span>
+          </div>
+        ))}
+      </div>
+      {(d.reference_image || d.reference_link || d.additional_notes) && (
+        <div className="p-4 border border-line rounded-xl space-y-2">
+          {d.reference_image && (
+            <a href={d.reference_image} target="_blank" rel="noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={d.reference_image} alt="Reference" className="w-20 h-24 object-cover rounded-lg" />
+            </a>
+          )}
+          {d.reference_link && (
+            <a href={d.reference_link} target="_blank" rel="noreferrer" className="caption1 underline break-all block">{d.reference_link}</a>
+          )}
+          {d.additional_notes && <p className="caption1 text-secondary whitespace-pre-line">{d.additional_notes}</p>}
+        </div>
+      )}
+    </div>
+  );
+}

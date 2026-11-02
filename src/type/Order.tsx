@@ -29,9 +29,28 @@ export interface OrderAddress {
   country: string;
 }
 
+export interface CustomOrderDetails {
+  gender: "male" | "female";
+  body_type: "top" | "bottom";
+  fitting_type: "loose" | "fit" | "tight";
+  height_feet: number;
+  height_inches: number;
+  height_label: string;
+  measurement_unit: "cm" | "inch";
+  measurements: Record<string, number | null>;
+  reference_image: string | null;
+  reference_link: string | null;
+  additional_notes: string | null;
+  preferred_delivery_date: string | null;
+  summary: string;
+}
+
 export interface Order {
   id: string;
   order_number: string;
+  order_type?: "regular" | "custom";
+  price_pending?: boolean;
+  custom_details?: CustomOrderDetails | null;
   tracking_number?: string | null;
   channel: string;
   status: string;

@@ -31,7 +31,8 @@ body {
   line-height: 26px;
   color: var(--black);
   font-weight: 400;
-  overflow-x: hidden;
+  overflow-x: hidden; // fallback for old browsers
+  overflow-x: clip; // same visual result, but doesn't break position: sticky
   user-select: none;
   scroll-behavior: smooth;
 }

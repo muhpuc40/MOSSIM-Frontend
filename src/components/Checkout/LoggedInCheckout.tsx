@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,6 +16,7 @@ import { ordersService, resolveCartItems } from "@/services/orders";
 import { CustomerAddress } from "@/type/Auth";
 import type { CouponResult } from "@/type/Order";
 import ModalPaymentInfo from "@/components/Modal/ModalPaymentInfo";
+import { useCurrency } from "@/store/currency";
 
 const SHIP_INSIDE = 80;
 const SHIP_OUTSIDE = 120;
@@ -33,7 +34,9 @@ const PAYMENT_METHODS = [
 const LoggedInCheckout = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { cartState, removeFromCart } = useCart();
+  const { cartState, clearCart } = useCart();
+  const { money } = useCurrency();
+  const placedRef = useRef(false);
   const { user, token, isLoggedIn, loading: authLoading } = useAuth();
 
   /* ── URL params from cart ─────────────── */
@@ -41,6 +44,7 @@ const LoggedInCheckout = () => {
 
   /* ── Guard: empty cart → /cart ────────── */
   useEffect(() => {
+    if (placedRef.current) return;
     if (!authLoading && isLoggedIn && cartState.cartArray.length === 0) {
       router.replace("/cart");
     }
@@ -150,7 +154,8 @@ const LoggedInCheckout = () => {
         notes: note.trim() || undefined,
       });
 
-      cartState.cartArray.forEach((item) => removeFromCart(item.variant_id));
+      placedRef.current = true;
+      clearCart();
 
       window.location.href = "/my-account#orders";
     } catch (err: any) {
@@ -345,8 +350,8 @@ const LoggedInCheckout = () => {
                   )}
                   {couponResult && (
                     <p className="caption2 text-success mt-2">
-                      ✓ <strong>{couponResult.coupon.code}</strong> — saving ৳
-                      {couponResult.discount.toLocaleString()}
+                      ✓ <strong>{couponResult.coupon.code}</strong> — saving{" "}
+                      {money(couponResult.discount)}
                     </p>
                   )}
                 </div>
@@ -358,10 +363,10 @@ const LoggedInCheckout = () => {
                   {/* Items */}
                   <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
                     {cartState.cartArray.map((product) => (
-                      <div key={product.id} className="flex items-center gap-3">
+                      <div key={product.variant_id} className="flex items-center gap-3">
                         <div className="w-14 aspect-[3/4] flex-shrink-0 rounded-lg overflow-hidden bg-white">
                           <Image
-                            src={product.thumbImage[0]}
+                            src={product.thumbImage?.[0] || product.images?.[0] || "/images/product/1000x1000.png"}
                             width={140}
                             height={180}
                             alt={product.name}
@@ -390,7 +395,7 @@ const LoggedInCheckout = () => {
                           <span className="text-secondary">
                             {product.quantity}×
                           </span>
-                          <br />৳{product.price.toLocaleString()}
+                          <br />{money(product.price, product.currencySymbol)}
                         </div>
                       </div>
                     ))}
@@ -400,7 +405,7 @@ const LoggedInCheckout = () => {
                     {/* Subtotal */}
                     <div className="flex justify-between caption1">
                       <span className="text-secondary">Subtotal</span>
-                      <span>৳{subtotal.toLocaleString()}</span>
+                      <span>{money(subtotal)}</span>
                     </div>
 
                     {/* Coupon discount */}
@@ -410,7 +415,7 @@ const LoggedInCheckout = () => {
                           Coupon ({couponResult.coupon.code})
                         </span>
                         <span className="text-red">
-                          -৳{couponResult.discount.toLocaleString()}
+                          -{money(couponResult.discount)}
                         </span>
                       </div>
                     )}
@@ -431,10 +436,10 @@ const LoggedInCheckout = () => {
                               checked={subtotal >= FREE_SHIP_AT}
                               readOnly
                             />
-                            <span className="caption2">Free (≥৳10,000)</span>
+                            <span className="caption2">Free (≥{money(FREE_SHIP_AT)})</span>
                           </div>
                           <span className="caption2 font-semibold text-success">
-                            ৳0
+                            {money(0)}
                           </span>
                         </label>
                         <label
@@ -452,7 +457,7 @@ const LoggedInCheckout = () => {
                             <span className="caption2">Inside Chittagong</span>
                           </div>
                           <span className="caption2 font-semibold">
-                            ৳{SHIP_INSIDE}
+                            {money(SHIP_INSIDE)}
                           </span>
                         </label>
                         <label
@@ -471,7 +476,7 @@ const LoggedInCheckout = () => {
                             <span className="caption2">Outside Chittagong</span>
                           </div>
                           <span className="caption2 font-semibold">
-                            ৳{SHIP_OUTSIDE}
+                            {money(SHIP_OUTSIDE)}
                           </span>
                         </label>
                       </div>
@@ -484,7 +489,7 @@ const LoggedInCheckout = () => {
                         {shipFee === 0 ? (
                           <span className="text-success">Free</span>
                         ) : (
-                          `৳${shipFee}`
+                          money(shipFee)
                         )}
                       </span>
                     </div>
@@ -492,7 +497,7 @@ const LoggedInCheckout = () => {
                     {/* Grand total */}
                     <div className="flex justify-between heading5 pt-3 border-t border-line">
                       <span>Total</span>
-                      <span>৳{total.toLocaleString()}</span>
+                      <span>{money(total)}</span>
                     </div>
                   </div>
                 </div>
@@ -512,7 +517,7 @@ const LoggedInCheckout = () => {
                   }>
                   {submitting
                     ? "Placing Order..."
-                    : `Place Order — ৳${total.toLocaleString()}`}
+                    : `Place Order — ${money(total)}`}
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { useCurrency } from "@/store/currency";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { Order } from "@/type/Order";
 import { ordersService } from "@/services/orders";
@@ -11,6 +12,7 @@ interface Props {
 }
 
 const DashboardTab: React.FC<Props> = ({ token, onSeeAll }) => {
+  const { money } = useCurrency();
   const [orders, setOrders] = useState<Order[]>([]);
   const [meta, setMeta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -83,7 +85,7 @@ const DashboardTab: React.FC<Props> = ({ token, onSeeAll }) => {
                     <td className="py-3 caption1 text-secondary">
                       {order.item_count} item{order.item_count !== 1 ? "s" : ""}
                     </td>
-                    <td className="py-3 caption1">৳{order.total_amount.toLocaleString()}</td>
+                    <td className="py-3 caption1">{money(order.total_amount, order.currency?.symbol)}</td>
                     <td className="py-3 text-right">
                       <span className={`caption2 px-3 py-1 rounded-full font-semibold ${STATUS_STYLE[order.status] ?? "bg-surface text-secondary"}`}>
                         {order.status_label}

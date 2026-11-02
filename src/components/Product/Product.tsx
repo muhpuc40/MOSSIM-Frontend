@@ -12,6 +12,7 @@ import { useCompare } from "@/context/CompareContext";
 import { useModalCompareContext } from "@/context/ModalCompareContext";
 import { useModalQuickviewContext } from "@/context/ModalQuickviewContext";
 import { useRouter } from "next/navigation";
+import { useCurrency } from "@/store/currency";
 
 interface ProductProps {
   data: ProductType;
@@ -31,13 +32,15 @@ const Product: React.FC<ProductProps> = ({ data, type, style }) => {
   const { openModalCompare } = useModalCompareContext();
   const { openQuickview } = useModalQuickviewContext();
   const router = useRouter();
+  const { money } = useCurrency();
+  const sym = data.currencySymbol;
 
   // Discount straight from backend (slug=discount_type, rate=discount_value)
   const discountType = data.slug || "";
   const discountValue = data.rate || 0;
   const hasDiscount = !!discountType && discountValue > 0;
   const discountLabel =
-    discountType === "percent" ? `-${discountValue}%` : `-৳${discountValue}`;
+    discountType === "percent" ? `-${discountValue}%` : `-${money(discountValue, sym)}`;
 
   const handleActiveColor = (item: string) => setActiveColor(item);
   const handleActiveSize = (item: string) => setActiveSize(item);
@@ -56,12 +59,10 @@ const Product: React.FC<ProductProps> = ({ data, type, style }) => {
   };
 
   const handleAddToCompare = () => {
-    if (compareState.compareArray.length < 3) {
-      if (compareState.compareArray.some((item) => item.id === data.id)) {
-        removeFromCompare(data.id);
-      } else {
-        addToCompare(data);
-      }
+    if (compareState.compareArray.some((item) => item.id === data.id)) {
+      removeFromCompare(data.id);
+    } else if (compareState.compareArray.length < 3) {
+      addToCompare(data);
     } else {
       alert("Compare up to 3 products");
     }
@@ -209,11 +210,11 @@ const Product: React.FC<ProductProps> = ({ data, type, style }) => {
 
               {/* Price */}
               <div className="product-price-block flex items-center gap-2 flex-wrap mt-1 duration-300 relative z-[1]">
-                <div className="product-price text-title">৳{data.price}</div>
+                <div className="product-price text-title">{money(data.price, sym)}</div>
                 {hasDiscount && (
                   <>
                     <div className="product-origin-price caption1 text-secondary2">
-                      <del>৳{data.originPrice}</del>
+                      <del>{money(data.originPrice, sym)}</del>
                     </div>
                     <div className="product-sale caption1 font-medium bg-green px-3 py-0.5 inline-block rounded-full">
                       {discountLabel}
@@ -252,11 +253,11 @@ const Product: React.FC<ProductProps> = ({ data, type, style }) => {
                   {data.name}
                 </div>
                 <div className="product-price-block flex items-center gap-2 flex-wrap mt-2 duration-300 relative z-[1]">
-                  <div className="product-price text-title">৳{data.price}</div>
+                  <div className="product-price text-title">{money(data.price, sym)}</div>
                   {hasDiscount && (
                     <>
                       <div className="product-origin-price caption1 text-secondary2">
-                        <del>৳{data.originPrice}</del>
+                        <del>{money(data.originPrice, sym)}</del>
                       </div>
                       <div className="product-sale caption1 font-medium bg-green px-3 py-0.5 inline-block rounded-full">
                         {discountLabel}
@@ -342,7 +343,7 @@ const Product: React.FC<ProductProps> = ({ data, type, style }) => {
               className="w-full aspect-square"
               width={5000}
               height={5000}
-              src={data.thumbImage[0]}
+              src={data.thumbImage[0] || "/images/product/1000x1000.png"}
               alt={data.name}
             />
             <div className="list-action flex flex-col gap-1 absolute top-0 right-0">

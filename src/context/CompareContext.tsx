@@ -15,18 +15,23 @@ type CompareAction =
     | { type: 'ADD_TO_WISHLIST'; payload: ProductType }
     | { type: 'REMOVE_FROM_WISHLIST'; payload: string }
     | { type: 'LOAD_WISHLIST'; payload: CompareItem[] }
+    | { type: 'CLEAR_COMPARE' }
 
 interface CompareContextProps {
     compareState: CompareState;
     addToCompare: (item: ProductType) => void;
     removeFromCompare: (itemId: string) => void;
+    clearCompare: () => void;
 }
+
+const STORAGE_KEY = 'mossim_compare_v1';
 
 const CompareContext = createContext<CompareContextProps | undefined>(undefined);
 
 const CompareReducer = (state: CompareState, action: CompareAction): CompareState => {
     switch (action.type) {
         case 'ADD_TO_WISHLIST':
+            if (state.compareArray.some((item) => item.id === action.payload.id)) return state;
             const newItem: CompareItem = { ...action.payload };
             return {
                 ...state,
@@ -42,6 +47,11 @@ const CompareReducer = (state: CompareState, action: CompareAction): CompareStat
                 ...state,
                 compareArray: action.payload,
             };
+        case 'CLEAR_COMPARE':
+            return {
+                ...state,
+                compareArray: [],
+            };
         default:
             return state;
     }
@@ -49,6 +59,23 @@ const CompareReducer = (state: CompareState, action: CompareAction): CompareStat
 
 export const CompareProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [compareState, dispatch] = useReducer(CompareReducer, { compareArray: [] });
+    const [hydrated, setHydrated] = useState(false);
+
+    /* ── Persist compare list across reloads ── */
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+            if (Array.isArray(saved) && saved.length) dispatch({ type: 'LOAD_WISHLIST', payload: saved.slice(0, 3) });
+        } catch {}
+        setHydrated(true);
+    }, []);
+
+    useEffect(() => {
+        if (!hydrated) return;
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(compareState.compareArray));
+        } catch {}
+    }, [compareState.compareArray, hydrated]);
 
     const addToCompare = (item: ProductType) => {
         dispatch({ type: 'ADD_TO_WISHLIST', payload: item });
@@ -58,8 +85,12 @@ export const CompareProvider: React.FC<{ children: React.ReactNode }> = ({ child
         dispatch({ type: 'REMOVE_FROM_WISHLIST', payload: itemId });
     };
 
+    const clearCompare = () => {
+        dispatch({ type: 'CLEAR_COMPARE' });
+    };
+
     return (
-        <CompareContext.Provider value={{ compareState, addToCompare, removeFromCompare }}>
+        <CompareContext.Provider value={{ compareState, addToCompare, removeFromCompare, clearCompare }}>
             {children}
         </CompareContext.Provider>
     );

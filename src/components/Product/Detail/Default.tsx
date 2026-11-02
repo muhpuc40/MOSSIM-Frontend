@@ -26,6 +26,7 @@ import {
   ApiProduct,
 } from "@/services/products";
 import { shareProduct } from "@/utils/shareProduct";
+import { useCurrency } from "@/store/currency";
 
 interface Props {
   data: Array<ProductType>;
@@ -52,12 +53,14 @@ const Default: React.FC<Props> = ({ productId }) => {
   const { openModalWishlist } = useModalWishlistContext();
   const { addToCompare, removeFromCompare, compareState } = useCompare();
   const { openModalCompare } = useModalCompareContext();
+  const { money } = useCurrency();
 
   /* ── Fetch product detail ───────────────────────────── */
   useEffect(() => {
     if (!productId) return;
     let mounted = true;
     setLoading(true);
+    setError(null);
     setThumbsSwiper(null);
     setActiveColor("");
     setActiveSize("");
@@ -70,8 +73,8 @@ const Default: React.FC<Props> = ({ productId }) => {
         setDetail(data);
         const def = getDefaultVariant(data.variants);
         if (def) {
-          setActiveColor(def.color.color_name);
-          setActiveSize(def.size.size_label);
+          setActiveColor(def.color?.color_name ?? "");
+          setActiveSize(def.size?.size_label ?? "");
         }
       })
       .catch((err) => {
@@ -134,7 +137,7 @@ const Default: React.FC<Props> = ({ productId }) => {
     displayPrice && hasDiscount
       ? displayPrice.discount_type === "percent"
         ? `-${displayPrice.discount_value}%`
-        : `-৳${displayPrice.discount_value}`
+        : `-${money(displayPrice.discount_value, displayPrice.currency?.symbol)}`
       : "";
 
   const productMain: ProductType | null = useMemo(
@@ -218,12 +221,10 @@ const Default: React.FC<Props> = ({ productId }) => {
 
   const handleAddToCompare = () => {
     if (!productMain) return;
-    if (compareState.compareArray.length < 3) {
-      if (compareState.compareArray.some((i) => i.id === productMain.id)) {
-        removeFromCompare(productMain.id);
-      } else {
-        addToCompare(productMain);
-      }
+    if (compareState.compareArray.some((i) => i.id === productMain.id)) {
+      removeFromCompare(productMain.id);
+    } else if (compareState.compareArray.length < 3) {
+      addToCompare(productMain);
     } else {
       alert("Compare up to 3 products");
     }
@@ -350,16 +351,14 @@ const Default: React.FC<Props> = ({ productId }) => {
               {displayPrice && (
                 <div className="flex items-center gap-3 flex-wrap mt-5 pb-6 border-b border-line">
                   <div className="product-price heading5">
-                    {displayPrice.currency.symbol}
-                    {displayPrice.current_price}
+                    {money(displayPrice.current_price, displayPrice.currency?.symbol)}
                   </div>
                   {hasDiscount && (
                     <>
                       <div className="w-px h-4 bg-line"></div>
                       <div className="product-origin-price font-normal text-secondary2">
                         <del>
-                          {displayPrice.currency.symbol}
-                          {displayPrice.actual_price}
+                          {money(displayPrice.actual_price, displayPrice.currency?.symbol)}
                         </del>
                       </div>
                       <div className="product-sale caption2 font-semibold bg-green px-3 py-0.5 inline-block rounded-full">

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import TopNavOne from "@/components/Header/TopNav/TopNavOne";
 import MenuOne from "@/components/Header/Menu/MenuOne";
 import Breadcrumb from "@/components/Breadcrumb/Breadcrumb";
+import { useCurrency } from "@/store/currency";
 import Footer from "@/components/Footer/Footer";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 
@@ -49,7 +50,7 @@ const FAQ_DATA: Record<string, { q: string; a: string }[]> = {
   delivery: [
     {
       q: "What are your delivery charges?",
-      a: "Inside Chattogram: ৳80. Outside Chattogram: ৳120. Orders above ৳10,000 qualify for free shipping anywhere in Bangladesh.",
+      a: "Inside Chattogram: {money:80}. Outside Chattogram: {money:120}. Orders of {money:10000} or more qualify for free shipping anywhere in Bangladesh.",
     },
     {
       q: "How does delivery work?",
@@ -153,6 +154,7 @@ const TABS = [
 ];
 
 const Faqs = () => {
+  const { money } = useCurrency();
   const [activeTab, setActiveTab] = useState<string>("how to buy");
   const [activeQuestion, setActiveQuestion] = useState<string | undefined>("");
 
@@ -208,7 +210,9 @@ const Faqs = () => {
                         <div className="heading6">{qa.q}</div>
                         <Icon.CaretRight size={24} />
                       </div>
-                      <div className="content body1 text-secondary">{qa.a}</div>
+                      <div className="content body1 text-secondary">
+                        {qa.a.replace(/\{money:(\d+)\}/g, (_, n) => money(Number(n)))}
+                      </div>
                     </div>
                   );
                 })}

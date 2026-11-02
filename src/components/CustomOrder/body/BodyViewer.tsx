@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Html, OrbitControls } from "@react-three/drei";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import {
   BOTTOM_FIELDS,
   BodyType,
@@ -14,89 +15,152 @@ import {
   OVERVIEW,
   SHAPES,
   TOP_FIELDS,
+  armCurve,
+  armRadiusFn,
   buildMarkers,
-  latheGeometry,
+  hairGeometry,
+  headGeometry,
+  legCurve,
+  legRadiusFn,
+  neckGeometry,
+  sweepGeometry,
+  torsoGeometry,
 } from "./shape";
 
 const ACCENT = "#ECB018"; // theme "yellow" — MOSSIM gold
-const SKIN = "#ebe5dc";
+const SKIN = "#f0e4d7"; // warm porcelain
+const HAIR = "#3b2f2a";
 
-/* ══════════ Mannequin ══════════ */
+/* ══════════ Studio lighting (no network: built-in room environment) ══════════ */
+
+function StudioEnvironment() {
+  const { gl, scene } = useThree();
+  useEffect(() => {
+    const pmrem = new THREE.PMREMGenerator(gl);
+    const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = env;
+    scene.environmentIntensity = 0.55;
+    return () => {
+      scene.environment = null;
+      env.dispose();
+      pmrem.dispose();
+    };
+  }, [gl, scene]);
+  return null;
+}
+
+/* ══════════ Doll ══════════ */
 
 function Mannequin({ gender }: { gender: Gender }) {
   const s = SHAPES[gender];
 
   const geo = useMemo(
     () => ({
-      torso: latheGeometry(s.torso, 64),
-      upper: latheGeometry(s.upperArm),
-      fore: latheGeometry(s.forearm),
-      leg: latheGeometry(s.leg),
+      torso: torsoGeometry(s),
+      arm: sweepGeometry(armCurve(s), armRadiusFn(s)),
+      leg: sweepGeometry(legCurve(s), legRadiusFn(s), 96, 32),
+      neck: neckGeometry(s),
+      head: headGeometry(s.head.r, gender),
+      hair: hairGeometry(s.head.r, gender),
     }),
-    [s],
+    [s, gender],
   );
   useEffect(() => () => Object.values(geo).forEach((g) => g.dispose()), [geo]);
 
-  const mat = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: SKIN, roughness: 0.6, metalness: 0.02 }),
+  const skin = useMemo(
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: SKIN,
+        roughness: 0.42,
+        metalness: 0,
+        clearcoat: 0.35,
+        clearcoatRoughness: 0.45,
+        sheen: 0.4,
+        sheenRoughness: 0.6,
+        sheenColor: new THREE.Color("#fff1e4"),
+      }),
     [],
   );
+  const hair = useMemo(
+    () => new THREE.MeshPhysicalMaterial({ color: HAIR, roughness: 0.55, clearcoat: 0.5, clearcoatRoughness: 0.35 }),
+    [],
+  );
+  useEffect(() => () => { skin.dispose(); hair.dispose(); }, [skin, hair]);
 
-  const elbowY = s.upperArm[s.upperArm.length - 1][0];
-  const elbowR = s.upperArm[s.upperArm.length - 1][1];
-  const wristY = s.forearm[s.forearm.length - 1][0];
+  const arm = useMemo(() => armCurve(s), [s]);
+  const wrist = arm.getPointAt(1);
+  const elbow = arm.getPointAt(0.53);
+  const legEnd = s.legPath[s.legPath.length - 1];
+  const h = s.head;
 
   return (
     <group>
-      {/* Torso — circular lathe squashed front-to-back */}
-      <mesh geometry={geo.torso} material={mat} scale={[1, 1, s.depth]} />
+      {/* Torso */}
+      <mesh geometry={geo.torso} material={skin} />
 
+      {/* Bust (female) — overlapping, flattened so it reads as one soft shape */}
       {s.bust &&
         [-1, 1].map((side) => (
-          <mesh key={`bust${side}`} material={mat} position={[side * s.bust!.x, s.bust!.y, s.bust!.z]} scale={[1.05, 0.88, 0.68]}>
-            <sphereGeometry args={[s.bust!.r, 32, 24]} />
+          <mesh key={`bust${side}`} material={skin} position={[side * s.bust!.x, s.bust!.y, s.bust!.z]} scale={[1.05, 0.9, 0.72]}>
+            <sphereGeometry args={[s.bust!.r, 40, 28]} />
           </mesh>
         ))}
 
-      {/* Neck + head */}
-      <mesh material={mat} position={[0, (s.neck.y0 + s.neck.y1) / 2, 0]}>
-        <cylinderGeometry args={[s.neck.r * 0.92, s.neck.r * 1.1, s.neck.y1 - s.neck.y0, 32]} />
-      </mesh>
-      <mesh material={mat} position={[0, s.head.y, 0.008]} scale={[0.82, 1, 0.92]}>
-        <sphereGeometry args={[s.head.r, 48, 32]} />
-      </mesh>
+      {/* Neck + sculpted head + hair */}
+      <mesh geometry={geo.neck} material={skin} position={[0, 0, 0.004]} scale={[1, 1, 0.92]} />
+      <group position={[0, h.y, 0.006]}>
+        <mesh geometry={geo.head} material={skin} />
+        {[-1, 1].map((side) => (
+          <mesh key={`ear${side}`} material={skin} position={[side * h.r * 0.77, -h.r * 0.1, -h.r * 0.04]} rotation={[0, side * 0.25, 0]} scale={[0.34, 1, 0.62]}>
+            <sphereGeometry args={[h.r * 0.21, 20, 14]} />
+          </mesh>
+        ))}
+        <mesh geometry={geo.hair} material={hair} />
+        {s.hair === "bun" && (
+          <mesh material={hair} position={[0, h.r * 0.5, -h.r * 0.98]} scale={[1, 0.9, 0.88]}>
+            <sphereGeometry args={[h.r * 0.4, 32, 24]} />
+          </mesh>
+        )}
+      </group>
 
       {[-1, 1].map((side) => (
-        <group key={side}>
-          {/* Shoulder cap + trapezius */}
-          <mesh material={mat} position={[side * s.shoulder.x, s.shoulder.y, 0]} scale={[1, 0.95, 0.85]}>
-            <sphereGeometry args={[s.shoulder.r, 32, 24]} />
+        <group key={side} scale={[side, 1, 1]}>
+          {/* Shoulder cap + trapezius slope */}
+          <mesh material={skin} position={[s.shoulder.x - 0.004, s.shoulder.y, -0.004]} scale={[0.96, 1.02, 0.88]}>
+            <sphereGeometry args={[s.shoulder.r, 36, 28]} />
           </mesh>
           <mesh
-            material={mat}
-            position={[(side * s.shoulder.x) / 2, s.shoulder.y + 0.028, -0.006]}
-            rotation={[0, 0, side * (Math.PI / 2 - 0.26)]}
-            scale={[1, 1, 0.8]}>
-            <capsuleGeometry args={[s.trapR, s.shoulder.x * 0.8, 8, 16]} />
+            material={skin}
+            position={[s.shoulder.x * 0.52, s.shoulder.y + 0.03, -0.01]}
+            rotation={[0, 0, Math.PI / 2 - 0.3]}
+            scale={[1, 1, 0.75]}>
+            <capsuleGeometry args={[s.shoulder.r * 0.72, s.shoulder.x * 0.62, 10, 20]} />
           </mesh>
 
-          {/* Arm (A-pose) */}
-          <group position={[side * s.shoulder.x, s.shoulder.y, 0]} rotation={[0, 0, side * s.armTilt]}>
-            <mesh geometry={geo.upper} material={mat} />
-            <mesh material={mat} position={[0, elbowY, 0]}>
-              <sphereGeometry args={[elbowR, 24, 16]} />
+          {/* Arm (A-pose, soft elbow) + mitten hand with thumb */}
+          <group position={[s.shoulder.x, s.shoulder.y, 0]} rotation={[0, 0, s.armTilt]}>
+            <mesh geometry={geo.arm} material={skin} />
+            <mesh material={skin} position={elbow}>
+              <sphereGeometry args={[armRadiusFn(s)(0.53) * 1.02, 24, 18]} />
             </mesh>
-            <mesh geometry={geo.fore} material={mat} />
-            <mesh material={mat} position={[0, wristY - 0.045, 0.004]} scale={[0.62, 1.25, 0.4]}>
-              <sphereGeometry args={[0.042, 24, 16]} />
-            </mesh>
+            <group position={[wrist.x, wrist.y - 0.006, wrist.z + 0.004]} scale={s.handScale}>
+              <mesh material={skin} position={[0, -0.05, 0.004]} rotation={[0.08, 0, 0]} scale={[0.42, 1.18, 0.88]}>
+                <sphereGeometry args={[0.045, 32, 24]} />
+              </mesh>
+              <mesh material={skin} position={[0.004, -0.032, 0.03]} rotation={[0.55, 0, -0.15]} scale={[0.42, 1, 0.48]}>
+                <sphereGeometry args={[0.024, 20, 14]} />
+              </mesh>
+            </group>
           </group>
 
-          {/* Leg + foot */}
-          <group position={[side * s.legX, 0, 0]}>
-            <mesh geometry={geo.leg} material={mat} />
-            <mesh material={mat} position={[0, 0.034, 0.045]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 1, 0.72]}>
-              <capsuleGeometry args={[0.033, 0.12, 8, 16]} />
+          {/* Leg + knee + foot */}
+          <mesh geometry={geo.leg} material={skin} />
+          <group position={[legEnd[0], 0, legEnd[2]]}>
+            <mesh material={skin} position={[0, 0.036, -0.012]} scale={[0.82, 0.78, 0.95]}>
+              <sphereGeometry args={[0.04, 24, 18]} />
+            </mesh>
+            <mesh material={skin} position={[0, 0.03, 0.05]} rotation={[0.08, 0, 0]} scale={[0.74, 0.55, 2.0]}>
+              <sphereGeometry args={[0.048, 32, 24]} />
             </mesh>
           </group>
         </group>
@@ -256,10 +320,11 @@ export default function BodyViewer({ gender, bodyType, active, label }: Props) {
             3D preview is not supported on this device.
           </div>
         }>
-        <hemisphereLight args={["#ffffff", "#d9d1c5", 1.15]} />
-        <directionalLight position={[2, 3.2, 2.6]} intensity={1.55} />
-        <directionalLight position={[-2.6, 2, -2.2]} intensity={0.75} />
-        <directionalLight position={[0, 1, 3]} intensity={0.25} />
+        <StudioEnvironment />
+        <hemisphereLight args={["#ffffff", "#e3d8ca", 0.75]} />
+        <directionalLight position={[2.2, 3.4, 2.8]} intensity={1.35} />
+        <directionalLight position={[-2.8, 2.2, -2.2]} intensity={0.8} color="#fff4ea" />
+        <directionalLight position={[-1.5, 1.2, 2.5]} intensity={0.35} />
 
         <Mannequin gender={gender} />
         {visible.map((m) => (

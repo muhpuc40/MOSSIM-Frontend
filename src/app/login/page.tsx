@@ -10,6 +10,13 @@ import Footer from "@/components/Footer/Footer";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { useAuth } from "@/context/AuthContext";
 
+/* Only same-site paths (e.g. "/checkout") are allowed as a post-login target */
+const redirectTarget = () => {
+  if (typeof window === "undefined") return "/my-account";
+  const r = new URLSearchParams(window.location.search).get("redirect") || "";
+  return r.startsWith("/") && !r.startsWith("//") ? r : "/my-account";
+};
+
 const Login = () => {
   const router = useRouter();
   const { login, isLoggedIn, loading } = useAuth();
@@ -32,7 +39,7 @@ const Login = () => {
 
     try {
       await login(loginVal.trim(), password);
-      router.push("/my-account");
+      router.push(redirectTarget());
     } catch (err: any) {
       setError(
         err?.message || err?.error || "Invalid credentials. Please try again.",
@@ -44,7 +51,7 @@ const Login = () => {
 
   useEffect(() => {
     if (!loading && isLoggedIn) {
-      router.replace("/my-account");
+      router.replace(redirectTarget());
     }
   }, [loading, isLoggedIn, router]);
 

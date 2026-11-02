@@ -12,8 +12,8 @@ import {
   SHIP_INSIDE,
   SHIP_OUTSIDE,
   inputClass,
-  money,
 } from "./constants";
+import { useCurrency } from "@/store/currency";
 
 interface Props {
   form: CustomOrderForm;
@@ -50,6 +50,7 @@ const FieldError = ({ msg }: { msg?: string }) =>
   msg ? <p className="caption2 text-red mt-1">{msg}</p> : null;
 
 export default function StepCustomer({ form, set, errors, setErrors, onBack, onNext }: Props) {
+  const { money } = useCurrency();
   const { user, token, isLoggedIn } = useAuth();
 
   /* ── Saved addresses (logged in) — same as LoggedInCheckout ── */

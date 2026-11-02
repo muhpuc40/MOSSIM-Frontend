@@ -52,6 +52,13 @@ export function getProductVariants(productId: string): ApiVariant[] {
     return variantsCache.get(productId) || []
 }
 
+/** Restore cached variants (e.g. for a cart reloaded from localStorage) */
+export function seedProductVariants(productId: string, variants: ApiVariant[]) {
+    if (variants?.length && !variantsCache.has(productId)) {
+        variantsCache.set(productId, variants)
+    }
+}
+
 /* ── Map API → template ProductType ────────────── */
 export function mapToProductType(p: ApiProduct): ProductType {
     // Cache variants for later lookup
@@ -105,6 +112,7 @@ export function mapToProductType(p: ApiProduct): ProductType {
         description: p.description || '',
         action: 'add to cart',
         slug: discountType,                     // carries discount_type
+        currencySymbol: def?.price?.currency?.symbol ?? '',
     }
 }
 

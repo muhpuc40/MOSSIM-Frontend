@@ -1,9 +1,17 @@
 "use client";
 
 // CartContext.tsx
-import React, { createContext, useContext, useReducer } from "react";
+import React, { createContext, useContext, useEffect, useReducer, useState } from "react";
 import { ProductType } from "@/type/ProductType";
-import { getProductVariants, getDefaultVariant } from "@/services/products";
+import {
+  getProductVariants,
+  getDefaultVariant,
+  seedProductVariants,
+  productsService,
+  ApiVariant,
+} from "@/services/products";
+
+const STORAGE_KEY = "mossim_cart_v1";
 
 export interface CartItem extends ProductType {
   quantity: number;
@@ -25,7 +33,8 @@ type CartAction =
       type: "SWITCH_VARIANT";
       payload: { from_variant_id: string; to: CartItem };
     }
-  | { type: "LOAD_CART"; payload: CartItem[] };
+  | { type: "LOAD_CART"; payload: CartItem[] }
+  | { type: "CLEAR_CART" };
 
 interface CartContextProps {
   cartState: CartState;
@@ -42,6 +51,8 @@ interface CartContextProps {
    * Resolves the default variant of `product` and adds it to the cart.
    */
   quickAdd: (product: ProductType) => void;
+  /** Empty the cart (after an order is placed) */
+  clearCart: () => void;
 }
 
 const CartContext = createContext<CartContextProps | undefined>(undefined);
@@ -118,6 +129,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "LOAD_CART":
       return { ...state, cartArray: action.payload };
 
+    case "CLEAR_CART":
+      return { ...state, cartArray: [] };
+
     default:
       return state;
   }
@@ -127,6 +141,40 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [cartState, dispatch] = useReducer(cartReducer, { cartArray: [] });
+  const [hydrated, setHydrated] = useState(false);
+
+  /* ── Persist cart across reloads ── */
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved && Array.isArray(saved.items)) {
+        const variants: Record<string, ApiVariant[]> = saved.variants || {};
+        Object.entries(variants).forEach(([id, list]) =>
+          seedProductVariants(id, list),
+        );
+        const items = (saved.items as CartItem[]).filter(
+          (i) => i && i.variant_id && i.quantity > 0,
+        );
+        if (items.length) dispatch({ type: "LOAD_CART", payload: items });
+      }
+    } catch {}
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      const variants: Record<string, ApiVariant[]> = {};
+      cartState.cartArray.forEach((i) => {
+        const list = getProductVariants(i.id);
+        if (list.length) variants[i.id] = list;
+      });
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ items: cartState.cartArray, variants }),
+      );
+    } catch {}
+  }, [cartState.cartArray, hydrated]);
 
   const addToCart = (item: CartItem) =>
     dispatch({ type: "ADD_TO_CART", payload: item });
@@ -146,13 +194,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       payload: { from_variant_id: fromVariantId, to },
     });
 
-  /** Card quick-add — resolves default variant from cache */
+  const clearCart = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+    dispatch({ type: "CLEAR_CART" });
+  };
+
+  /** Card quick-add — resolves default variant (cache, else API) */
   const quickAdd = (product: ProductType) => {
     const variants = getProductVariants(product.id);
     if (!variants.length) {
-      console.warn("quickAdd: no variants cached for product", product.id);
+      productsService
+        .show(product.id)
+        .then((p) => {
+          if (p.variants?.length) addDefaultVariant(product, p.variants);
+        })
+        .catch((err) => console.warn("quickAdd:", err));
       return;
     }
+    addDefaultVariant(product, variants);
+  };
+
+  const addDefaultVariant = (product: ProductType, variants: ApiVariant[]) => {
     const v = getDefaultVariant(variants) ?? variants[0];
     if (!v) return;
 
@@ -179,6 +243,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         updateQty,
         switchVariant,
         quickAdd,
+        clearCart,
       }}>
       {children}
     </CartContext.Provider>

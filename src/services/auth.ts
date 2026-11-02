@@ -75,9 +75,29 @@ export const authService = {
         const res = await fetch(`${API_URL}/auth/me`, {
             headers: authHeaders(token),
         })
-        if (!res.ok) throw new Error('Unauthorized')
+        if (!res.ok) {
+            // keep the HTTP status so callers can tell "expired" (401) from "server down"
+            const err = new Error('Unauthorized') as Error & { status?: number }
+            err.status = res.status
+            throw err
+        }
         const json = await res.json()
         return json.customer ?? json.data ?? json
+    },
+
+    /** Exchange a (possibly expired) token for a fresh one within JWT_REFRESH_TTL. */
+    refresh: async (token: string): Promise<{ access_token: string; expires_in: number }> => {
+        const res = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: authHeaders(token),
+        })
+        const json = await res.json().catch(() => ({}))
+        if (!res.ok || !json.access_token) {
+            const err = new Error(json.message || 'Session expired') as Error & { status?: number }
+            err.status = res.status
+            throw err
+        }
+        return json
     },
 
     logout: async (token: string): Promise<void> => {
@@ -180,4 +200,4 @@ export const authService = {
         })
         if (!res.ok) throw new Error('Failed to delete address')
     },
-}
+}

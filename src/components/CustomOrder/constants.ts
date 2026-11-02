@@ -1,3 +1,4 @@
+import { formatMoney } from "@/store/currency";
 import type { MeasureKey } from "./body/shape";
 
 /* Same delivery fees as the regular checkout */
@@ -147,4 +148,5 @@ export function addDays(days: number): Date {
   return d;
 }
 
-export const money = (n: number) => `৳${n.toLocaleString()}`;
+/** Prefer `useCurrency().money` in components (re-renders when the API symbol loads). */
+export const money = (n: number) => formatMoney(n);

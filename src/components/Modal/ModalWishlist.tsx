@@ -6,10 +6,12 @@ import Image from 'next/image'
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { useModalWishlistContext } from '@/context/ModalWishlistContext'
 import { useWishlist } from '@/context/WishlistContext'
+import { useCurrency } from '@/store/currency'
 
 const ModalWishlist = () => {
     const { isModalOpen, closeModalWishlist } = useModalWishlistContext();
     const { wishlistState, removeFromWishlist } = useWishlist()
+    const { money } = useCurrency()
 
     return (
         <>
@@ -33,7 +35,7 @@ const ModalWishlist = () => {
                                 <div className="infor flex items-center gap-5">
                                     <div className="bg-img">
                                         <Image
-                                            src={product.images[0]}
+                                            src={product.images?.[0] || '/images/product/1000x1000.png'}
                                             width={300}
                                             height={300}
                                             alt={product.name}
@@ -43,8 +45,10 @@ const ModalWishlist = () => {
                                     <div className=''>
                                         <div className="name text-button">{product.name}</div>
                                         <div className="flex items-center gap-2 mt-2">
-                                            <div className="product-price text-title">${product.price}.00</div>
-                                            <div className="product-origin-price text-title text-secondary2"><del>${product.originPrice}.00</del></div>
+                                            <div className="product-price text-title">{money(product.price, product.currencySymbol)}</div>
+                                            {product.originPrice > product.price && (
+                                                <div className="product-origin-price text-title text-secondary2"><del>{money(product.originPrice, product.currencySymbol)}</del></div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

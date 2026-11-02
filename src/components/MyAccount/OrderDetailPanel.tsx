@@ -4,6 +4,7 @@ import Image from "next/image";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { Order, CustomOrderItem } from "@/type/Order";
 import { ordersService } from "@/services/orders";
+import { useCurrency } from "@/store/currency";
 import { STATUS_STYLE } from "./constants";
 
 interface Props {
@@ -93,6 +94,8 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const { money: fmt } = useCurrency();
+  const money = (n: number) => fmt(n, order?.currency?.symbol);
 
   useEffect(() => {
     let mounted = true;
@@ -155,7 +158,7 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
         {/* LEFT — Items (or custom measurements) */}
         <div>
           {order.order_type === "custom" ? (
-            <CustomItems items={order.custom_items ?? []} deliveryDate={order.preferred_delivery_date ?? null} pricePending={!!order.price_pending} />
+            <CustomItems symbol={order.currency?.symbol} items={order.custom_items ?? []} deliveryDate={order.preferred_delivery_date ?? null} pricePending={!!order.price_pending} />
           ) : (
           <>
           <div className="caption2 text-secondary font-semibold uppercase mb-3">
@@ -186,11 +189,11 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
                     </div>
                     <div className="caption2 text-secondary mt-0.5 font-mono">{item.variant?.sku}</div>
                     <div className="caption1 text-secondary mt-1">
-                      {item.qty} × ৳{item.unit_price.toLocaleString()}
+                      {item.qty} × {money(item.unit_price)}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-button">৳{item.line_total.toLocaleString()}</div>
+                    <div className="text-button">{money(item.line_total)}</div>
                   </div>
                 </div>
               ))}
@@ -257,14 +260,14 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
             <div className="p-4 bg-surface rounded-xl space-y-2">
               <div className="flex justify-between caption1">
                 <span className="text-secondary">{order.order_type === "custom" ? "Agreed price" : "Subtotal"}</span>
-                <span>{order.price_pending ? "To be confirmed" : `৳${order.subtotal.toLocaleString()}`}</span>
+                <span>{order.price_pending ? "To be confirmed" : money(order.subtotal)}</span>
               </div>
               {order.discount_amount > 0 && (
                 <div className="flex justify-between caption1">
                   <span className="text-secondary">
                     Discount{order.coupon ? ` (${order.coupon.code})` : ""}
                   </span>
-                  <span className="text-red">-৳{order.discount_amount.toLocaleString()}</span>
+                  <span className="text-red">-{money(order.discount_amount)}</span>
                 </div>
               )}
               <div className="flex justify-between caption1">
@@ -273,13 +276,13 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
                   {order.shipping_fee === 0 ? (
                     <span className="text-success">Free</span>
                   ) : (
-                    `৳${order.shipping_fee}`
+                    money(order.shipping_fee)
                   )}
                 </span>
               </div>
               <div className="flex justify-between heading6 pt-2 border-t border-line">
                 <span>Total</span>
-                <span>৳{order.total_amount.toLocaleString()}</span>
+                <span>{money(order.total_amount)}</span>
               </div>
             </div>
           </div>
@@ -425,7 +428,9 @@ const MEASURE_LABELS: Record<string, string> = {
   hip: "Hip", thigh: "Thigh", front_rise: "Front Rise", back_rise: "Back Rise",
 };
 
-function CustomItems({ items, deliveryDate, pricePending }: { items: CustomOrderItem[]; deliveryDate: string | null; pricePending: boolean }) {
+function CustomItems({ items, deliveryDate, pricePending, symbol }: { items: CustomOrderItem[]; deliveryDate: string | null; pricePending: boolean; symbol?: string }) {
+  const { money: fmt } = useCurrency();
+  const money = (n: number) => fmt(n, symbol);
   return (
     <div>
       <div className="caption2 text-secondary font-semibold uppercase mb-3">Custom Items ({items.length})</div>
@@ -453,8 +458,8 @@ function CustomItems({ items, deliveryDate, pricePending }: { items: CustomOrder
                 <div className="text-right flex-shrink-0">
                   {it.is_priced ? (
                     <>
-                      <div className="text-button">৳{it.line_total.toLocaleString()}</div>
-                      {it.qty > 1 && <div className="caption2 text-secondary">{it.qty} × ৳{it.unit_price.toLocaleString()}</div>}
+                      <div className="text-button">{money(it.line_total)}</div>
+                      {it.qty > 1 && <div className="caption2 text-secondary">{it.qty} × {money(it.unit_price)}</div>}
                     </>
                   ) : (
                     <div className="caption2 text-secondary font-semibold">Price pending</div>

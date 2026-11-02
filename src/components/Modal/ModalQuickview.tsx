@@ -12,8 +12,14 @@ import { useCompare } from "@/context/CompareContext";
 import { useModalCompareContext } from "@/context/ModalCompareContext";
 import ModalSizeguide from "./ModalSizeguide";
 import { useRouter } from "next/navigation";
-import { getProductVariants, getDefaultVariant } from "@/services/products";
+import {
+  getProductVariants,
+  getDefaultVariant,
+  productsService,
+  ApiVariant,
+} from "@/services/products";
 import { shareProduct } from "@/utils/shareProduct";
+import { useCurrency } from "@/store/currency";
 
 const ModalQuickview = () => {
   const router = useRouter();
@@ -30,12 +36,31 @@ const ModalQuickview = () => {
   const { openModalWishlist } = useModalWishlistContext();
   const { addToCompare, removeFromCompare, compareState } = useCompare();
   const { openModalCompare } = useModalCompareContext();
+  const { money } = useCurrency();
 
-  /* ── Variants from cache ────────────────────────────── */
-  const variants = useMemo(
-    () => (selectedProduct ? getProductVariants(selectedProduct.id) : []),
-    [selectedProduct],
-  );
+  /* ── Variants from cache (fetched if not cached yet) ── */
+  const [variants, setVariants] = useState<ApiVariant[]>([]);
+
+  useEffect(() => {
+    if (!selectedProduct) {
+      setVariants([]);
+      return;
+    }
+    const cached = getProductVariants(selectedProduct.id);
+    setVariants(cached);
+    if (cached.length) return;
+
+    let alive = true;
+    productsService
+      .show(selectedProduct.id)
+      .then((p) => {
+        if (alive) setVariants(p.variants || []);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [selectedProduct]);
 
   /* ── Set default color & size when modal opens ──────── */
   useEffect(() => {
@@ -55,8 +80,8 @@ const ModalQuickview = () => {
   const availableSizes = useMemo(() => {
     if (!activeColor) return [];
     return variants
-      .filter((v) => v.color.color_name === activeColor)
-      .map((v) => v.size.size_label);
+      .filter((v) => v.color?.color_name === activeColor)
+      .map((v) => v.size?.size_label);
   }, [activeColor, variants]);
 
   /* ── When color changes: pick first available size ──── */
@@ -72,8 +97,8 @@ const ModalQuickview = () => {
     return (
       variants.find(
         (v) =>
-          v.color.color_name === activeColor &&
-          v.size.size_label === activeSize,
+          v.color?.color_name === activeColor &&
+          v.size?.size_label === activeSize,
       ) || null
     );
   }, [activeColor, activeSize, variants]);
@@ -91,7 +116,7 @@ const ModalQuickview = () => {
     displayPrice && hasDiscount
       ? displayPrice.discount_type === "percent"
         ? `-${displayPrice.discount_value}%`
-        : `-৳${displayPrice.discount_value}`
+        : `-${money(displayPrice.discount_value, displayPrice.currency?.symbol)}`
       : "";
 
   /* ── Handlers ───────────────────────────────────────── */
@@ -167,12 +192,10 @@ const ModalQuickview = () => {
 
   const handleAddToCompare = () => {
     if (!selectedProduct) return;
-    if (compareState.compareArray.length < 3) {
-      if (compareState.compareArray.some((i) => i.id === selectedProduct.id)) {
-        removeFromCompare(selectedProduct.id);
-      } else {
-        addToCompare(selectedProduct);
-      }
+    if (compareState.compareArray.some((i) => i.id === selectedProduct.id)) {
+      removeFromCompare(selectedProduct.id);
+    } else if (compareState.compareArray.length < 3) {
+      addToCompare(selectedProduct);
     } else {
       alert("Compare up to 3 products");
     }
@@ -268,16 +291,14 @@ const ModalQuickview = () => {
                 {displayPrice && (
                   <div className="flex items-center gap-3 flex-wrap mt-5 pb-6 border-b border-line">
                     <div className="product-price heading5">
-                      {displayPrice.currency.symbol}
-                      {displayPrice.current_price}
+                      {money(displayPrice.current_price, displayPrice.currency?.symbol)}
                     </div>
                     {hasDiscount && (
                       <>
                         <div className="w-px h-4 bg-line"></div>
                         <div className="product-origin-price font-normal text-secondary2">
                           <del>
-                            {displayPrice.currency.symbol}
-                            {displayPrice.actual_price}
+                            {money(displayPrice.actual_price, displayPrice.currency?.symbol)}
                           </del>
                         </div>
                         <div className="product-sale caption2 font-semibold bg-green px-3 py-0.5 inline-block rounded-full">

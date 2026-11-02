@@ -7,11 +7,13 @@ import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { useModalCartContext } from "@/context/ModalCartContext";
 import { useCart } from "@/context/CartContext";
 import { getProductVariants } from "@/services/products";
+import { useCurrency } from "@/store/currency";
 
 const ModalCart = () => {
   const [activeTab, setActiveTab] = useState<string>("");
   const { isModalOpen, closeModalCart } = useModalCartContext();
   const { cartState, removeFromCart, updateQty, switchVariant } = useCart();
+  const { money } = useCurrency();
 
   const totalCart = cartState.cartArray.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -75,7 +77,7 @@ const ModalCart = () => {
 
             <div className="flex items-center justify-between px-6 pt-4">
               <div className="heading5">Subtotal</div>
-              <div className="heading5">BDT {totalCart.toFixed(2)}</div>
+              <div className="heading5">{money(totalCart)}</div>
             </div>
 
             <div className="block-button px-6 pt-4 pb-6 flex flex-col gap-3">
@@ -189,6 +191,7 @@ const CartLine = ({
   onUpdateQty,
   onSwitchVariant,
 }: CartLineProps) => {
+  const { money } = useCurrency();
   const variants = useMemo(() => getProductVariants(product.id), [product.id]);
 
   const [selectedColor, setSelectedColor] = useState<string>(
@@ -253,7 +256,7 @@ const CartLine = ({
           className="bg-img flex-shrink-0 rounded-lg overflow-hidden mr-3"
           style={{ width: 80, height: 100 }}>
           <Image
-            src={product.images[0]}
+            src={product.images?.[0] || "/images/product/1000x1000.png"}
             width={160}
             height={200}
             alt={product.name}
@@ -266,7 +269,7 @@ const CartLine = ({
           <div className="text-button line-clamp-2 leading-snug">
             {product.name}
           </div>
-          <div className="text-title font-semibold">BDT {product.price}</div>
+          <div className="text-title font-semibold">{money(product.price, product.currencySymbol)}</div>
         </div>
         <div
           className="flex-shrink-0 flex flex-col gap-1 mr-3"
@@ -335,7 +338,7 @@ const CartLine = ({
       <div className="md:hidden flex items-start gap-4">
         <div className="bg-img w-[80px] h-[100px] flex-shrink-0 rounded-lg overflow-hidden">
           <Image
-            src={product.images[0]}
+            src={product.images?.[0] || "/images/product/1000x1000.png"}
             width={200}
             height={260}
             alt={product.name}
@@ -353,7 +356,7 @@ const CartLine = ({
               Remove
             </button>
           </div>
-          <div className="text-title font-semibold">BDT {product.price}</div>
+          <div className="text-title font-semibold">{money(product.price, product.currencySymbol)}</div>
           {product.variation && product.variation.length > 0 && (
             <div>
               <p className="caption2 text-secondary mb-1">

@@ -22,11 +22,14 @@ interface WishlistContextProps {
     removeFromWishlist: (itemId: string) => void;
 }
 
+const STORAGE_KEY = 'mossim_wishlist_v1';
+
 const WishlistContext = createContext<WishlistContextProps | undefined>(undefined);
 
 const WishlistReducer = (state: WishlistState, action: WishlistAction): WishlistState => {
     switch (action.type) {
         case 'ADD_TO_WISHLIST':
+            if (state.wishlistArray.some((item) => item.id === action.payload.id)) return state;
             const newItem: WishlistItem = { ...action.payload };
             return {
                 ...state,
@@ -49,6 +52,23 @@ const WishlistReducer = (state: WishlistState, action: WishlistAction): Wishlist
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [wishlistState, dispatch] = useReducer(WishlistReducer, { wishlistArray: [] });
+    const [hydrated, setHydrated] = useState(false);
+
+    /* ── Persist wishlist across reloads ── */
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+            if (Array.isArray(saved) && saved.length) dispatch({ type: 'LOAD_WISHLIST', payload: saved });
+        } catch {}
+        setHydrated(true);
+    }, []);
+
+    useEffect(() => {
+        if (!hydrated) return;
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(wishlistState.wishlistArray));
+        } catch {}
+    }, [wishlistState.wishlistArray, hydrated]);
 
     const addToWishlist = (item: ProductType) => {
         dispatch({ type: 'ADD_TO_WISHLIST', payload: item });

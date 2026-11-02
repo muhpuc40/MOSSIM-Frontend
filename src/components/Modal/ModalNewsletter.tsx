@@ -5,8 +5,10 @@ import React, { useState, useEffect } from "react";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { useModalQuickviewContext } from "@/context/ModalQuickviewContext";
 import Image from "next/image";
+import { useCurrency } from "@/store/currency";
 
 const ModalNewsletter = () => {
+  const { money } = useCurrency();
   const [open, setOpen] = useState<boolean>(false);
   const router = useRouter();
   const { openQuickview } = useModalQuickviewContext();
@@ -71,7 +73,7 @@ const ModalNewsletter = () => {
                           <Image
                             width={5000}
                             height={5000}
-                            src={item.thumbImage[0]}
+                            src={item.thumbImage[0] || "/images/product/1000x1000.png"}
                             alt={item.name}
                             className="w-[100px] aspect-square flex-shrink-0 rounded-lg"
                           />
@@ -80,10 +82,10 @@ const ModalNewsletter = () => {
                           <div className="name text-button">{item.name}</div>
                           <div className="flex items-center gap-2 mt-2">
                             <div className="product-price text-title">
-                              ${item.price}.00
+                              {money(item.price, item.currencySymbol)}
                             </div>
                             <div className="product-origin-price text-title text-secondary2">
-                              <del>${item.originPrice}.00</del>
+                              <del>{money(item.originPrice, item.currencySymbol)}</del>
                             </div>
                           </div>
                         </div>

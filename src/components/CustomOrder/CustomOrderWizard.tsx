@@ -18,8 +18,8 @@ import {
   SHIP_OUTSIDE,
   STORAGE_KEY,
   emptyItem,
-  money,
 } from "./constants";
+import { useCurrency } from "@/store/currency";
 
 const STEPS = ["Custom Details", "Customer Information", "Confirmation"];
 
@@ -80,6 +80,7 @@ function Progress({ step, maxStep, onGo }: { step: number; maxStep: number; onGo
 
 /* ══════════ Side summary (steps 2–3) ══════════ */
 function Summary({ form, images, onEdit }: { form: CustomOrderForm; images: Images; onEdit: () => void }) {
+  const { money } = useCurrency();
   const ship = form.shipType === "inside" ? SHIP_INSIDE : SHIP_OUTSIDE;
   const pieces = form.items.reduce((n, it) => n + (Number(it.qty) || 1), 0);
   return (

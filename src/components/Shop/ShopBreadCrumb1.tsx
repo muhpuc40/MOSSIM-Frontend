@@ -9,6 +9,7 @@ import { ProductType } from "@/type/ProductType";
 import { ApiProduct, mapToProductType } from "@/services/products";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
+import { useCurrency } from "@/store/currency";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -50,6 +51,8 @@ const ShopBreadCrumb1: React.FC<Props> = ({
   initialMeta,
   initialShopData,
 }) => {
+  const { money } = useCurrency();
+
   /* ── Filter state ── */
   const [type, setType] = useState<string | null>(initType ?? null);
   const [category, setCategory] = useState<string | null>(initCategory ?? null);
@@ -469,7 +472,7 @@ const ShopBreadCrumb1: React.FC<Props> = ({
                     <div className="caption1">Min:</div>
 
                     <div className="price-min caption1 font-semibold">
-                      ৳{priceRange.min.toLocaleString()}
+                      {money(priceRange.min)}
                     </div>
                   </div>
 
@@ -477,7 +480,7 @@ const ShopBreadCrumb1: React.FC<Props> = ({
                     <div className="caption1">Max:</div>
 
                     <div className="price-max caption1 font-semibold">
-                      ৳{priceRange.max.toLocaleString()}
+                      {money(priceRange.max)}
                     </div>
                   </div>
                 </div>
@@ -686,8 +689,8 @@ const ShopBreadCrumb1: React.FC<Props> = ({
                       <Icon.X size={12} />
 
                       <span className="caption1">
-                        Price: ৳{appliedPriceRange.min.toLocaleString()}
-                        {" - "}৳{appliedPriceRange.max.toLocaleString()}
+                        Price: {money(appliedPriceRange.min)}
+                        {" - "}{money(appliedPriceRange.max)}
                       </span>
                     </div>
                   )}

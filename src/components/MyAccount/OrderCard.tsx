@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Order } from "@/type/Order";
 import { ordersService } from "@/services/orders";
+import { useCurrency } from "@/store/currency";
 import { STATUS_STYLE } from "./constants";
 import { ExpandedPanel } from "./OrdersTab";
 
@@ -15,6 +16,7 @@ interface Props {
 
 const OrderCard: React.FC<Props> = ({ order, expandedPanel, onTogglePanel, token, onRefresh }) => {
   const [cancelling, setCancelling] = useState(false);
+  const { money } = useCurrency();
 
   const handleCancel = async () => {
     if (!confirm("Cancel this order?")) return;
@@ -59,7 +61,7 @@ const OrderCard: React.FC<Props> = ({ order, expandedPanel, onTogglePanel, token
           {order.price_pending ? (
             <div className="caption1 font-semibold text-secondary">Price pending</div>
           ) : (
-            <div className="heading6">৳{order.total_amount.toLocaleString()}</div>
+            <div className="heading6">{money(order.total_amount, order.currency?.symbol)}</div>
           )}
         </div>
       </div>

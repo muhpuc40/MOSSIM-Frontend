@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,6 +11,7 @@ import { useCart } from "@/context/CartContext";
 import { ordersService, resolveCartItems } from "@/services/orders";
 import type { CouponResult } from "@/type/Order";
 import ModalPaymentInfo from "@/components/Modal/ModalPaymentInfo";
+import { useCurrency } from "@/store/currency";
 
 const SHIP_INSIDE = 80;
 const SHIP_OUTSIDE = 120;
@@ -19,12 +20,15 @@ const FREE_SHIP_AT = 10000;
 const GuestCheckout = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { cartState, removeFromCart } = useCart();
+  const { cartState, clearCart } = useCart();
+  const { money } = useCurrency();
+  const placedRef = useRef(false);
 
   const urlShipType = searchParams.get("ship_type") ?? "inside";
 
   /* ── Empty cart guard ────────────────── */
   useEffect(() => {
+    if (placedRef.current) return;
     if (cartState.cartArray.length === 0) router.replace("/cart");
   }, [cartState.cartArray.length, router]);
 
@@ -119,7 +123,7 @@ const GuestCheckout = () => {
         return;
       }
 
-      await ordersService.placeGuestOrder({
+      const order = await ordersService.placeGuestOrder({
         name: name.trim(),
         phone: phone.trim(),
         email: email.trim() || undefined,
@@ -139,7 +143,11 @@ const GuestCheckout = () => {
         notes: note.trim() || undefined,
       });
 
-      cartState.cartArray.forEach((item) => removeFromCart(item.variant_id));
+      placedRef.current = true;
+      clearCart();
+      alert(
+        `Thank you! Your order ${order?.order_number ?? ""} has been placed. We will contact you shortly to confirm it.`,
+      );
       router.push("/"); // guest has no account page — send home
     } catch (err: any) {
       setSubmitError(
@@ -170,7 +178,7 @@ const GuestCheckout = () => {
                 <span className="caption1 text-secondary">
                   Already have an account?
                 </span>
-                <Link href="/login" className="text-button hover-underline">
+                <Link href="/login?redirect=/checkout" className="text-button hover-underline">
                   Login
                 </Link>
               </div>
@@ -316,8 +324,8 @@ const GuestCheckout = () => {
                   )}
                   {couponResult && (
                     <p className="caption2 text-success mt-2">
-                      ✓ <strong>{couponResult.coupon.code}</strong> — saving ৳
-                      {couponResult.discount.toLocaleString()}
+                      ✓ <strong>{couponResult.coupon.code}</strong> — saving{" "}
+                      {money(couponResult.discount)}
                     </p>
                   )}
                 </div>
@@ -328,10 +336,10 @@ const GuestCheckout = () => {
 
                   <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
                     {cartState.cartArray.map((product) => (
-                      <div key={product.id} className="flex items-center gap-3">
+                      <div key={product.variant_id} className="flex items-center gap-3">
                         <div className="w-14 aspect-[3/4] flex-shrink-0 rounded-lg overflow-hidden bg-white">
                           <Image
-                            src={product.thumbImage[0]}
+                            src={product.thumbImage?.[0] || product.images?.[0] || "/images/product/1000x1000.png"}
                             width={140}
                             height={180}
                             alt={product.name}
@@ -360,7 +368,7 @@ const GuestCheckout = () => {
                           <span className="text-secondary">
                             {product.quantity}×
                           </span>
-                          <br />৳{product.price.toLocaleString()}
+                          <br />{money(product.price, product.currencySymbol)}
                         </div>
                       </div>
                     ))}
@@ -369,7 +377,7 @@ const GuestCheckout = () => {
                   <div className="border-t border-line pt-4 space-y-3">
                     <div className="flex justify-between caption1">
                       <span className="text-secondary">Subtotal</span>
-                      <span>৳{subtotal.toLocaleString()}</span>
+                      <span>{money(subtotal)}</span>
                     </div>
 
                     {couponResult && (
@@ -378,7 +386,7 @@ const GuestCheckout = () => {
                           Coupon ({couponResult.coupon.code})
                         </span>
                         <span className="text-red">
-                          -৳{couponResult.discount.toLocaleString()}
+                          -{money(couponResult.discount)}
                         </span>
                       </div>
                     )}
@@ -399,10 +407,10 @@ const GuestCheckout = () => {
                               checked={subtotal >= FREE_SHIP_AT}
                               readOnly
                             />
-                            <span className="caption2">Free (≥৳10,000)</span>
+                            <span className="caption2">Free (≥{money(FREE_SHIP_AT)})</span>
                           </div>
                           <span className="caption2 font-semibold text-success">
-                            ৳0
+                            {money(0)}
                           </span>
                         </label>
                         <label
@@ -420,7 +428,7 @@ const GuestCheckout = () => {
                             <span className="caption2">Inside Chittagong</span>
                           </div>
                           <span className="caption2 font-semibold">
-                            ৳{SHIP_INSIDE}
+                            {money(SHIP_INSIDE)}
                           </span>
                         </label>
                         <label
@@ -439,7 +447,7 @@ const GuestCheckout = () => {
                             <span className="caption2">Outside Chittagong</span>
                           </div>
                           <span className="caption2 font-semibold">
-                            ৳{SHIP_OUTSIDE}
+                            {money(SHIP_OUTSIDE)}
                           </span>
                         </label>
                       </div>
@@ -451,14 +459,14 @@ const GuestCheckout = () => {
                         {shipFee === 0 ? (
                           <span className="text-success">Free</span>
                         ) : (
-                          `৳${shipFee}`
+                          money(shipFee)
                         )}
                       </span>
                     </div>
 
                     <div className="flex justify-between heading5 pt-3 border-t border-line">
                       <span>Total</span>
-                      <span>৳{total.toLocaleString()}</span>
+                      <span>{money(total)}</span>
                     </div>
                   </div>
                 </div>
@@ -475,7 +483,7 @@ const GuestCheckout = () => {
                   disabled={submitting}>
                   {submitting
                     ? "Placing Order..."
-                    : `Place Order — ৳${total.toLocaleString()}`}
+                    : `Place Order — ${money(total)}`}
                 </button>
               </div>
             </div>

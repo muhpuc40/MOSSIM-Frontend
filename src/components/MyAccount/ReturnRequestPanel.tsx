@@ -5,6 +5,7 @@ import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { Order } from "@/type/Order";
 import { ordersService } from "@/services/orders";
 import { returnsService } from "@/services/returns";
+import { useCurrency } from "@/store/currency";
 
 interface Props {
   orderId: string;
@@ -22,6 +23,7 @@ const ReturnRequestPanel: React.FC<Props> = ({
   onClose,
 }) => {
   const [order, setOrder] = useState<Order | null>(null);
+  const { money } = useCurrency();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -202,7 +204,7 @@ const ReturnRequestPanel: React.FC<Props> = ({
                       )}
                     </div>
                     <div className="caption2 text-secondary mt-0.5">
-                      Ordered: {item.qty} × ৳{item.unit_price.toLocaleString()}
+                      Ordered: {item.qty} × {money(item.unit_price, order?.currency?.symbol)}
                     </div>
 
                     {sel.selected && (

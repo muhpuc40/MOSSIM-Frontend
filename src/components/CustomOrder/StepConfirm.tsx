@@ -15,8 +15,8 @@ import {
   addDays,
   inputClass,
   isoDate,
-  money,
 } from "./constants";
+import { useCurrency } from "@/store/currency";
 
 interface Props {
   form: CustomOrderForm;
@@ -41,6 +41,7 @@ export function validateConfirm(form: CustomOrderForm): Errors {
 }
 
 export default function StepConfirm({ form, set, errors, setErrors, submitting, submitError, onBack, onSubmit }: Props) {
+  const { money } = useCurrency();
   const [payInfoOpen, setPayInfoOpen] = useState(false);
   const shipFee = form.shipType === "inside" ? SHIP_INSIDE : SHIP_OUTSIDE;
   const minDate = isoDate(addDays(MIN_LEAD_DAYS));

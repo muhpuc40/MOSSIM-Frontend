@@ -6,10 +6,12 @@ import Image from 'next/image'
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { useModalCompareContext } from '@/context/ModalCompareContext'
 import { useCompare } from '@/context/CompareContext'
+import { useCurrency } from '@/store/currency'
 
 const ModalCompare = () => {
     const { isModalOpen, closeModalCompare } = useModalCompareContext();
-    const { compareState, removeFromCompare } = useCompare()
+    const { compareState, removeFromCompare, clearCompare } = useCompare()
+    const { money } = useCurrency()
 
     return (
         <>
@@ -33,7 +35,7 @@ const ModalCompare = () => {
                                         <div className="infor flex items-center gap-4">
                                             <div className="bg-img w-[100px] h-[100px] flex-shrink-0 rounded-lg overflow-hidden">
                                                 <Image
-                                                    src={product.images[0]}
+                                                    src={product.images?.[0] || '/images/product/1000x1000.png'}
                                                     width={500}
                                                     height={500}
                                                     alt={product.name}
@@ -42,7 +44,7 @@ const ModalCompare = () => {
                                             </div>
                                             <div className=''>
                                                 <div className="name text-title">{product.name}</div>
-                                                <div className="product-price text-title mt-2">${product.price}.00</div>
+                                                <div className="product-price text-title mt-2">{money(product.price, product.currencySymbol)}</div>
                                             </div>
                                         </div>
                                         <div className="close-btn absolute -right-4 -top-4 w-8 h-8 rounded-full bg-red text-white flex items-center justify-center duration-300 cursor-pointer hover:bg-black" onClick={() => removeFromCompare(product.id)}>
@@ -75,7 +77,7 @@ const ModalCompare = () => {
                                 <div
                                     onClick={() => {
                                         closeModalCompare()
-                                        compareState.compareArray.length = 0
+                                        clearCompare()
                                     }}
                                     className="button-main whitespace-nowrap border border-black bg-white text-black"
                                 >

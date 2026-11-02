@@ -10,7 +10,7 @@ import Footer from "@/components/Footer/Footer";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { useCart } from "@/context/CartContext";
 import { countdownTime } from "@/store/countdownTime";
-import { getProductVariants } from "@/services/products";
+import { useCurrency } from "@/store/currency";
 
 const FREE_SHIP_AT = 10000;
 const SHIP_INSIDE = 80;
@@ -19,6 +19,7 @@ const SHIP_OUTSIDE = 120;
 const Cart = () => {
   const router = useRouter();
   const { cartState, updateQty, removeFromCart } = useCart();
+  const { money } = useCurrency();
 
   /* ── Countdown ───────────────────────── */
   const [timeLeft, setTimeLeft] = useState(countdownTime());
@@ -44,27 +45,10 @@ const Cart = () => {
 
   const total = subtotal + shipFee;
 
-  /* ── SKU resolver ────────────────────── */
-  const getVariantSku = (
-    productId: string,
-    color: string,
-    size: string,
-  ): string => {
-    const variants = getProductVariants(productId);
-    const variant =
-      variants.find(
-        (v) => v.color?.color_name === color && v.size?.size_label === size,
-      ) ??
-      variants.find((v) => v.is_default) ??
-      variants[0];
-    return variant?.sku ?? "";
-  };
-
   /* ── Qty handler ─────────────────────── */
-  const handleQty = (id: string, qty: number, size: string, color: string) => {
+  const handleQty = (variantId: string, qty: number) => {
     if (qty < 1) return;
-    // updateQty(product.variant_id, newQty);
-    updateQty(id, qty);
+    updateQty(variantId, qty);
   };
 
   const goToCheckout = () => {
@@ -89,14 +73,14 @@ const Cart = () => {
                 <div className="text">
                   {subtotal >= FREE_SHIP_AT ? (
                     <span className="text-success font-semibold">
-                      🎉 Youve unlocked free shipping!
+                      🎉 You've unlocked free shipping!
                     </span>
                   ) : (
                     <>
                       Buy
                       <span className="text-button">
                         {" "}
-                        ৳{(FREE_SHIP_AT - subtotal).toLocaleString()}{" "}
+                        {money(FREE_SHIP_AT - subtotal)}{" "}
                       </span>
                       more to get
                       <span className="text-button"> free shipping</span>
@@ -158,7 +142,7 @@ const Cart = () => {
                               <div className="flex items-center gap-6">
                                 <div className="bg-img md:w-[100px] w-20 aspect-[3/4] flex-shrink-0">
                                   <Image
-                                    src={product.thumbImage[0]}
+                                    src={product.thumbImage?.[0] || product.images?.[0] || "/images/product/1000x1000.png"}
                                     width={1000}
                                     height={1000}
                                     alt={product.name}
@@ -195,7 +179,7 @@ const Cart = () => {
                             {/* Price */}
                             <div className="w-1/12 flex items-center justify-center">
                               <div className="text-title text-center">
-                                ৳{product.price.toLocaleString()}
+                                {money(product.price, product.currencySymbol)}
                               </div>
                             </div>
 
@@ -206,10 +190,8 @@ const Cart = () => {
                                   className={`text-base max-md:text-sm cursor-pointer ${product.quantity === 1 ? "opacity-30" : ""}`}
                                   onClick={() =>
                                     handleQty(
-                                      product.id,
+                                      product.variant_id,
                                       product.quantity - 1,
-                                      product.selectedSize,
-                                      product.selectedColor,
                                     )
                                   }
                                 />
@@ -220,10 +202,8 @@ const Cart = () => {
                                   className="text-base max-md:text-sm cursor-pointer"
                                   onClick={() =>
                                     handleQty(
-                                      product.id,
+                                      product.variant_id,
                                       product.quantity + 1,
-                                      product.selectedSize,
-                                      product.selectedColor,
                                     )
                                   }
                                 />
@@ -233,10 +213,10 @@ const Cart = () => {
                             {/* Line total */}
                             <div className="w-1/6 flex items-center justify-center">
                               <div className="text-title text-center">
-                                ৳
-                                {(
-                                  product.quantity * product.price
-                                ).toLocaleString()}
+                                {money(
+                                  product.quantity * product.price,
+                                  product.currencySymbol,
+                                )}
                               </div>
                             </div>
 
@@ -266,7 +246,7 @@ const Cart = () => {
                 {/* Subtotal */}
                 <div className="total-block py-4 flex justify-between border-b border-line">
                   <div className="text-title">Subtotal</div>
-                  <div className="text-title">৳{subtotal.toLocaleString()}</div>
+                  <div className="text-title">{money(subtotal)}</div>
                 </div>
 
                 {/* Shipping selection */}
@@ -287,7 +267,7 @@ const Cart = () => {
                         <span className="caption1">Free Shipping</span>
                       </div>
                       <span className="caption1 font-semibold text-success">
-                        ৳0
+                        {money(0)}
                       </span>
                     </label>
 
@@ -307,7 +287,7 @@ const Cart = () => {
                         <span className="caption1">Inside Chittagong</span>
                       </div>
                       <span className="caption1 font-semibold">
-                        ৳{SHIP_INSIDE}
+                        {money(SHIP_INSIDE)}
                       </span>
                     </label>
 
@@ -327,7 +307,7 @@ const Cart = () => {
                         <span className="caption1">Outside Chittagong</span>
                       </div>
                       <span className="caption1 font-semibold">
-                        ৳{SHIP_OUTSIDE}
+                        {money(SHIP_OUTSIDE)}
                       </span>
                     </label>
                   </div>
@@ -336,7 +316,7 @@ const Cart = () => {
                 {/* Total */}
                 <div className="total-cart-block pt-4 pb-4 flex justify-between border-b border-line">
                   <div className="heading5">Total</div>
-                  <div className="heading5">৳{total.toLocaleString()}</div>
+                  <div className="heading5">{money(total)}</div>
                 </div>
 
                 {/* CTA */}

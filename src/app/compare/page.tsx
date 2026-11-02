@@ -16,42 +16,17 @@ import * as Icon from "@phosphor-icons/react/dist/ssr";
 import { useCompare } from "@/context/CompareContext";
 import { useCart } from "@/context/CartContext";
 import { useModalCartContext } from "@/context/ModalCartContext";
+import { useCurrency } from "@/store/currency";
 
 const Compare = () => {
   const { compareState, removeFromCompare } = useCompare();
-  const { cartState, addToCart, updateQty } = useCart();
+  const { quickAdd } = useCart();
+  const { money } = useCurrency();
   const { openModalCart } = useModalCartContext();
 
   const handleAddToCart = (productItem: ProductType) => {
-    // Pick first available variant (compare page doesn't have a variant picker)
-    const firstVariant = productItem.variation?.[0];
-    const firstSize = productItem.sizes?.[0] || "";
-    const firstColor = firstVariant?.color || "";
-
-    // Build a variant_id — use the product's actual variant_id if present,
-    // otherwise fall back to product.id (works for products without variants)
-    const variantId = (productItem as any).variant_id || productItem.id;
-
-    // Check if this variant is already in the cart
-    const existing = cartState.cartArray.find(
-      (item: any) => item.variant_id === variantId,
-    );
-
-    if (existing) {
-      // Already in cart — just bump quantity by 1
-      updateQty(variantId, existing.quantity + 1);
-    } else {
-      // New item — add to cart with sensible defaults
-      addToCart({
-        ...productItem,
-        quantity: 1,
-        selectedColor: firstColor,
-        selectedSize: firstSize,
-        variant_id: variantId,
-        variant_sku: (productItem as any).variant_sku || "",
-      } as any);
-    }
-
+    // Adds the product's default variant (same as the product card quick-add)
+    quickAdd(productItem);
     openModalCart();
   };
 
@@ -132,7 +107,7 @@ const Compare = () => {
                           <Image
                             src={
                               item.images?.[0] ||
-                              "/images/product/placeholder.png"
+                              "/images/product/1000x1000.png"
                             }
                             width={1000}
                             height={1500}
@@ -194,10 +169,10 @@ const Compare = () => {
                       key={item.id}>
                       {/* Price */}
                       <div className="h-[60px] border-b border-line flex items-center justify-center gap-2">
-                        <span className="font-semibold">৳{item.price}</span>
-                        {item.originPrice && item.originPrice > item.price && (
+                        <span className="font-semibold">{money(item.price, item.currencySymbol)}</span>
+                        {item.originPrice > item.price && (
                           <del className="text-secondary2 text-sm">
-                            ৳{item.originPrice}
+                            {money(item.originPrice, item.currencySymbol)}
                           </del>
                         )}
                       </div>

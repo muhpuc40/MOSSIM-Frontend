@@ -23,8 +23,8 @@ const PaymentInfoPage = () => {
           <div className="max-w-[760px] mx-auto rounded-[28px] border border-line bg-white md:p-8 p-5">
             <div className="heading3">Payment Information</div>
             <div className="body2 text-secondary mt-2 mb-7">
-              Choose MFS or bank transfer and complete your payment using the
-              details below.
+              Choose Bangla QR, MFS or bank transfer and complete your payment
+              using the details below.
             </div>
 
             <PaymentInfoContent />

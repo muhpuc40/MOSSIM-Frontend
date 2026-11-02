@@ -309,7 +309,7 @@ const LoggedInCheckout = () => {
 
             {/* ── Right: Coupon + Summary ───────── */}
             <div className="lg:w-2/5 w-full">
-              <div className="sticky top-24 space-y-5">
+              <div className="sticky top-[calc(var(--header-offset)_+_24px)] follow-header space-y-5">
                 {/* Coupon */}
                 <div className="bg-surface p-5 rounded-2xl">
                   <div className="heading6 mb-3">Apply Coupon</div>

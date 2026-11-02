@@ -5,6 +5,15 @@ import Image from "next/image";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 
 const MFS_NUMBER = "01737280617";
+const QR_IMAGE = "/images/payment/qr.jpeg";
+
+type Tab = "qr" | "mfs" | "bank";
+
+const TABS: { key: Tab; label: string }[] = [
+  { key: "qr", label: "Bangla QR" },
+  { key: "mfs", label: "MFS Payment" },
+  { key: "bank", label: "Bank Details" },
+];
 
 const BANK_DETAILS = {
   bankName: "Eastern bank Ltd.",
@@ -16,7 +25,7 @@ const BANK_DETAILS = {
 };
 
 const PaymentInfoContent = () => {
-  const [activeTab, setActiveTab] = useState<"mfs" | "bank">("mfs");
+  const [activeTab, setActiveTab] = useState<Tab>("qr");
   const [copied, setCopied] = useState(false);
 
   const handleCopyNumber = async () => {
@@ -35,33 +44,59 @@ const PaymentInfoContent = () => {
 
   return (
     <div className="w-full">
-      <div className="flex items-center gap-2 p-1 bg-surface rounded-xl">
-        <button
-          type="button"
-          onClick={() => setActiveTab("mfs")}
-          className={`w-1/2 px-4 py-3 rounded-lg text-button duration-200 ${
-            activeTab === "mfs" ? "bg-black text-white" : "text-secondary"
-          }`}>
-          MFS Payment
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("bank")}
-          className={`w-1/2 px-4 py-3 rounded-lg text-button duration-200 ${
-            activeTab === "bank" ? "bg-black text-white" : "text-secondary"
-          }`}>
-          Bank Details
-        </button>
+      <div className="flex items-center gap-1 sm:gap-2 p-1 bg-surface rounded-xl">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex-1 px-2 sm:px-4 py-3 rounded-lg text-button whitespace-nowrap duration-200 max-sm:!text-[13px] ${
+              activeTab === tab.key ? "bg-black text-white" : "text-secondary"
+            }`}>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {activeTab === "mfs" ? (
+      {activeTab === "qr" ? (
+        <div className="mt-6">
+          <div className="text-center">
+            <div className="heading5">Scan with Bangla QR</div>
+
+            <div className="caption1 text-secondary mt-2">
+              Open bKash or any Bangla QR supported banking app and scan the code below.
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-center">
+            <div className="relative sm:w-[300px] w-[240px] aspect-[743/934] rounded-2xl overflow-hidden border border-line bg-white">
+              <Image
+                src={QR_IMAGE}
+                alt="MOSSIM Bangla QR payment code"
+                fill
+                sizes="300px"
+                className="object-contain"
+                priority
+              />
+            </div>
+          </div>
+
+          <div className="mt-5 flex items-start gap-3 rounded-xl border border-line p-4">
+            <Icon.Info size={20} className="mt-0.5 shrink-0" />
+
+            <div className="caption1 text-secondary">
+              Use your order number as the payment reference and keep the
+              transaction ID for confirmation.
+            </div>
+          </div>
+        </div>
+      ) : activeTab === "mfs" ? (
         <div className="mt-6">
           <div className="text-center">
             <div className="heading5">Pay with bKash or Nagad</div>
 
             <div className="caption1 text-secondary mt-2">
-              Scan the QR code or send payment to the number below.
+              Send payment to the number below.
             </div>
           </div>
 

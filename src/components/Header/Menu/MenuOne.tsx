@@ -56,6 +56,13 @@ const MenuOne: React.FC<Props> = ({ props }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollPosition]);
 
+  /* ── Tell sticky elements whether the fixed header is showing ──
+     globals.scss turns html[data-header] into --header-offset */
+  useEffect(() => {
+    document.documentElement.dataset.header = fixedHeader ? "shown" : "hidden";
+  }, [fixedHeader]);
+  useEffect(() => () => { delete document.documentElement.dataset.header; }, []);
+
   /* ── Fetch categories once ───────────────── */
   useEffect(() => {
     if (_fetched) {

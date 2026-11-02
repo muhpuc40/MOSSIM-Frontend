@@ -388,7 +388,7 @@ export default function CustomOrderWizard() {
             )}
           </div>
           <div className="lg:w-2/5 w-full">
-            <div className="lg:sticky lg:top-24">
+            <div className="lg:sticky lg:top-[calc(var(--header-offset)_+_24px)] follow-header">
               <Summary form={form} images={images} onEdit={() => go(1)} />
             </div>
           </div>

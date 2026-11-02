@@ -90,7 +90,7 @@ const Choice = ({ selected, onClick, children }: { selected: boolean; onClick: (
   <button
     type="button"
     onClick={onClick}
-    className={`flex-1 px-4 py-3 rounded-lg border caption1 font-semibold duration-200 capitalize ${
+    className={`flex-1 px-2 py-3 rounded-lg border caption1 font-semibold duration-200 capitalize ${
       selected ? "border-black bg-black text-white" : "border-line bg-white hover:border-black"
     }`}>
     {children}
@@ -236,25 +236,24 @@ function ItemEditor({
       </div>
 
       {/* Section 1 — Basic information */}
-      <div className="heading5 mb-1">Basic Information</div>
-      <p className="caption1 text-secondary mb-5">Tell us who we are tailoring this piece for.</p>
-
       <div className="space-y-5 mb-10">
-        <div>
-          <div className="caption1 font-semibold mb-2">Gender</div>
-          <div className="flex gap-3">
-            {(["male", "female"] as const).map((g) => (
-              <Choice key={g} selected={item.gender === g} onClick={() => update({ gender: g })}>{g}</Choice>
-            ))}
+        {/* 2) Gender + Body Type in one row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <div className="caption1 font-semibold mb-2">Gender</div>
+            <div className="flex gap-2">
+              {(["male", "female"] as const).map((g) => (
+                <Choice key={g} selected={item.gender === g} onClick={() => update({ gender: g })}>{g}</Choice>
+              ))}
+            </div>
           </div>
-        </div>
-
-        <div>
-          <div className="caption1 font-semibold mb-2">Body Type</div>
-          <div className="flex gap-3">
-            {(["top", "bottom"] as const).map((b) => (
-              <Choice key={b} selected={item.body_type === b} onClick={() => update({ body_type: b })}>{b}</Choice>
-            ))}
+          <div>
+            <div className="caption1 font-semibold mb-2">Body Type</div>
+            <div className="flex gap-2">
+              {(["top", "bottom"] as const).map((b) => (
+                <Choice key={b} selected={item.body_type === b} onClick={() => update({ body_type: b })}>{b}</Choice>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -518,6 +517,7 @@ export default function StepDetails({ form, setForm, images, setImages, activeId
   const hasErrors = Object.keys(errors).length > 0;
 
   return (
+    <div>
     <div className="flex max-lg:flex-col-reverse gap-y-6 gap-x-10">
       {/* ── Left: items ──────────────────────── */}
       <div className="lg:w-1/2 w-full">
@@ -556,35 +556,12 @@ export default function StepDetails({ form, setForm, images, setImages, activeId
           )}
         </div>
 
-        {items.length < MAX_ITEMS ? (
-          <button
-            type="button"
-            onClick={addMore}
-            className="w-full mt-4 p-4 border border-dashed border-black rounded-xl flex items-center justify-center gap-2 text-button duration-200 hover:bg-surface">
-            <Icon.Plus size={18} weight="bold" /> Add More
-          </button>
-        ) : (
-          <p className="caption1 text-secondary text-center mt-4">You can add up to {MAX_ITEMS} items in one order.</p>
-        )}
-        <p className="caption2 text-secondary text-center mt-2">
-          Ordering for someone else, or another style? Add each piece as a separate item.
-        </p>
-
-        {hasErrors && (
-          <div className="p-3 bg-red/5 border border-red/20 rounded-lg caption1 text-red mt-6">
-            Please fix the highlighted fields before continuing.
-          </div>
-        )}
-
-        <button type="button" className="button-main bg-black w-full text-center mt-6" onClick={handleNext}>
-          Next: Customer Information
-        </button>
       </div>
 
       {/* ── Right: 3D model (follows the open item) ── */}
       {/* on mobile the column itself is sticky (its parent is the tall flex container) */}
-      <div className="lg:w-1/2 w-full max-lg:sticky max-lg:top-[56px] max-lg:z-20 max-lg:bg-white max-lg:pt-2 max-lg:pb-3 max-lg:-mx-4 max-lg:px-4 max-lg:shadow-[0_8px_16px_-12px_rgba(0,0,0,0.25)]">
-        <div className="lg:sticky lg:top-24">
+      <div className="lg:w-1/2 w-full max-lg:sticky max-lg:top-[var(--header-offset)] follow-header max-lg:z-20 max-lg:bg-white max-lg:pt-2 max-lg:pb-3 max-lg:-mx-4 max-lg:px-4 max-lg:shadow-[0_8px_16px_-12px_rgba(0,0,0,0.25)]">
+        <div className="lg:sticky lg:top-[calc(var(--header-offset)_+_24px)] follow-header">
           <div className="lg:hidden flex items-center justify-between mb-2">
             <span className="caption1 font-semibold">
               Measurement guide{items.length > 1 ? ` · Item ${idx + 1}` : ""}
@@ -598,6 +575,37 @@ export default function StepDetails({ form, setForm, images, setImages, activeId
               <BodyViewer gender={current.gender} bodyType={current.body_type} active={active} label={items.length > 1 ? `Item ${idx + 1}` : undefined} />
             </div>
           )}
+        </div>
+      </div>
+    </div>
+
+      {/* Actions sit outside the flex row so the sticky mobile model releases before them */}
+      <div className="lg:w-1/2 w-full">
+        <p className="caption2 text-secondary mt-4">
+          {items.length < MAX_ITEMS
+            ? "Ordering for someone else, or another style? Use Add More for each extra piece."
+            : `You can add up to ${MAX_ITEMS} items in one order.`}
+        </p>
+
+        {hasErrors && (
+          <div className="p-3 bg-red/5 border border-red/20 rounded-lg caption1 text-red mt-4">
+            Please fix the highlighted fields before continuing.
+          </div>
+        )}
+
+        {/* 3) Add More + Next in one line */}
+        <div className="flex gap-3 mt-4">
+          {items.length < MAX_ITEMS && (
+            <button
+              type="button"
+              onClick={addMore}
+              className="button-main bg-white text-black border border-black flex-1 flex items-center justify-center gap-2 hover:bg-black hover:text-white">
+              <Icon.Plus size={16} weight="bold" /> Add More
+            </button>
+          )}
+          <button type="button" className="button-main bg-black flex-1 text-center" onClick={handleNext}>
+            Next
+          </button>
         </div>
       </div>
     </div>

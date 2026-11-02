@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import * as Icon from "@phosphor-icons/react/dist/ssr";
-import { Order, CustomOrderDetails } from "@/type/Order";
+import { Order, CustomOrderItem } from "@/type/Order";
 import { ordersService } from "@/services/orders";
 import { STATUS_STYLE } from "./constants";
 
@@ -154,8 +154,8 @@ const OrderDetailPanel: React.FC<Props> = ({ orderId, token, onRefresh, onClose 
       <div className="grid md:grid-cols-2 gap-6 p-6">
         {/* LEFT — Items (or custom measurements) */}
         <div>
-          {order.order_type === "custom" && order.custom_details ? (
-            <CustomDetails d={order.custom_details} pricePending={!!order.price_pending} />
+          {order.order_type === "custom" ? (
+            <CustomItems items={order.custom_items ?? []} deliveryDate={order.preferred_delivery_date ?? null} pricePending={!!order.price_pending} />
           ) : (
           <>
           <div className="caption2 text-secondary font-semibold uppercase mb-3">
@@ -425,46 +425,70 @@ const MEASURE_LABELS: Record<string, string> = {
   hip: "Hip", thigh: "Thigh", front_rise: "Front Rise", back_rise: "Back Rise",
 };
 
-function CustomDetails({ d, pricePending }: { d: CustomOrderDetails; pricePending: boolean }) {
-  const unit = d.measurement_unit === "inch" ? "in" : "cm";
+function CustomItems({ items, deliveryDate, pricePending }: { items: CustomOrderItem[]; deliveryDate: string | null; pricePending: boolean }) {
   return (
     <div>
-      <div className="caption2 text-secondary font-semibold uppercase mb-3">Custom Order</div>
-      <div className="p-4 border border-line rounded-xl mb-3">
-        <div className="text-button">{d.summary}</div>
-        <div className="caption2 text-secondary mt-1">
-          Height {d.height_label}
-          {d.preferred_delivery_date &&
-            ` · Preferred delivery ${new Date(d.preferred_delivery_date).toLocaleDateString("en-BD", { year: "numeric", month: "short", day: "numeric" })}`}
-        </div>
-        {pricePending && (
-          <div className="caption2 mt-2 inline-block px-2 py-0.5 rounded bg-surface font-semibold">
-            Our team will call you to confirm the price
-          </div>
-        )}
-      </div>
-      <div className="border border-line rounded-xl divide-y divide-line mb-3">
-        {Object.entries(d.measurements).map(([k, val]) => (
-          <div key={k} className="flex justify-between px-4 py-2 caption1">
-            <span className="text-secondary">{MEASURE_LABELS[k] ?? k}</span>
-            <span className="font-semibold">{val ?? "–"} <span className="text-secondary font-normal">{unit}</span></span>
-          </div>
-        ))}
-      </div>
-      {(d.reference_image || d.reference_link || d.additional_notes) && (
-        <div className="p-4 border border-line rounded-xl space-y-2">
-          {d.reference_image && (
-            <a href={d.reference_image} target="_blank" rel="noreferrer">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={d.reference_image} alt="Reference" className="w-20 h-24 object-cover rounded-lg" />
-            </a>
+      <div className="caption2 text-secondary font-semibold uppercase mb-3">Custom Items ({items.length})</div>
+      {(deliveryDate || pricePending) && (
+        <div className="caption2 text-secondary mb-3">
+          {deliveryDate &&
+            `Preferred delivery ${new Date(deliveryDate).toLocaleDateString("en-BD", { year: "numeric", month: "short", day: "numeric" })}`}
+          {pricePending && (
+            <span className="caption2 ml-2 inline-block px-2 py-0.5 rounded bg-surface font-semibold text-black">
+              Our team will call you to confirm the price
+            </span>
           )}
-          {d.reference_link && (
-            <a href={d.reference_link} target="_blank" rel="noreferrer" className="caption1 underline break-all block">{d.reference_link}</a>
-          )}
-          {d.additional_notes && <p className="caption1 text-secondary whitespace-pre-line">{d.additional_notes}</p>}
         </div>
       )}
+      <div className="space-y-3">
+        {items.map((it, i) => {
+          const unit = it.measurement_unit === "inch" ? "in" : "cm";
+          return (
+            <div key={it.id} className="border border-line rounded-xl overflow-hidden">
+              <div className="flex items-start justify-between gap-3 p-3 bg-surface">
+                <div>
+                  <div className="text-button text-sm">{i + 1}. {it.summary}</div>
+                  <div className="caption2 text-secondary mt-0.5">Height {it.height_label} · Qty {it.qty}</div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  {it.is_priced ? (
+                    <>
+                      <div className="text-button">৳{it.line_total.toLocaleString()}</div>
+                      {it.qty > 1 && <div className="caption2 text-secondary">{it.qty} × ৳{it.unit_price.toLocaleString()}</div>}
+                    </>
+                  ) : (
+                    <div className="caption2 text-secondary font-semibold">Price pending</div>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 px-3 py-2">
+                {Object.entries(it.measurements).map(([k, val]) => (
+                  <div key={k} className="flex justify-between caption2 py-0.5">
+                    <span className="text-secondary">{MEASURE_LABELS[k] ?? k}</span>
+                    <span className="font-semibold">{val ?? "–"} {unit}</span>
+                  </div>
+                ))}
+              </div>
+              {(it.reference_image || it.reference_link || it.additional_notes) && (
+                <div className="flex gap-3 px-3 pb-3">
+                  {it.reference_image && (
+                    <a href={it.reference_image} target="_blank" rel="noreferrer" className="flex-shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={it.reference_image} alt="Reference" className="w-12 h-14 object-cover rounded-lg" />
+                    </a>
+                  )}
+                  <div className="min-w-0">
+                    {it.reference_link && (
+                      <a href={it.reference_link} target="_blank" rel="noreferrer" className="caption2 underline break-all block">{it.reference_link}</a>
+                    )}
+                    {it.additional_notes && <p className="caption2 text-secondary whitespace-pre-line">{it.additional_notes}</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

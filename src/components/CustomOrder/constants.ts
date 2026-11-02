@@ -16,7 +16,10 @@ export const MAX_LEAD_DAYS = 120;
 export const MAX_IMAGE_MB = 5;
 export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export const STORAGE_KEY = "mossim_custom_order";
+export const STORAGE_KEY = "mossim_custom_order_v2";
+
+/** Same limit as the backend (CustomOrderRequest::MAX_ITEMS). */
+export const MAX_ITEMS = 10;
 
 export const MEASURE_HINT: Record<MeasureKey, string> = {
   chest: "Around the fullest part of the chest, under the arms.",
@@ -51,17 +54,24 @@ export const POLICIES: { title: string; body: string }[] = [
 
 export type Unit = "cm" | "inch";
 
-export interface CustomOrderForm {
-  // Step 1
+/** One made-to-measure piece (maps to a custom_order_items row). */
+export interface ItemForm {
+  uid: string; // client-only key
   gender: "male" | "female";
   body_type: "top" | "bottom";
   height_feet: string;
   height_inches: string;
   fitting_type: "" | "loose" | "fit" | "tight";
+  qty: string;
   unit: Unit;
   m: Record<MeasureKey, string>;
   reference_link: string;
   additional_notes: string;
+}
+
+export interface CustomOrderForm {
+  // Step 1
+  items: ItemForm[];
   // Step 2
   name: string;
   phone: string;
@@ -80,19 +90,30 @@ export interface CustomOrderForm {
   agree: boolean;
 }
 
+export const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+
+/** A blank item; pass `from` to carry over who it is for (gender, height, unit). */
+export function emptyItem(from?: ItemForm): ItemForm {
+  return {
+    uid: newUid(),
+    gender: from?.gender ?? "male",
+    body_type: "top",
+    height_feet: from?.height_feet ?? "",
+    height_inches: from?.height_inches ?? "",
+    fitting_type: "",
+    qty: "1",
+    unit: from?.unit ?? "inch",
+    m: {
+      chest: "", shoulder: "", waist: "", sleeve_length: "", arm_hole: "",
+      hip: "", thigh: "", front_rise: "", back_rise: "",
+    },
+    reference_link: "",
+    additional_notes: "",
+  };
+}
+
 export const EMPTY_FORM: CustomOrderForm = {
-  gender: "male",
-  body_type: "top",
-  height_feet: "",
-  height_inches: "",
-  fitting_type: "",
-  unit: "inch",
-  m: {
-    chest: "", shoulder: "", waist: "", sleeve_length: "", arm_hole: "",
-    hip: "", thigh: "", front_rise: "", back_rise: "",
-  },
-  reference_link: "",
-  additional_notes: "",
+  items: [emptyItem()],
   name: "",
   phone: "",
   email: "",

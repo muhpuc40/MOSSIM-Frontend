@@ -13,18 +13,23 @@ export interface CustomOrderAddress {
   country: string;
 }
 
-export interface CustomOrderPayload {
-  // Step 1
+export interface CustomOrderItemPayload {
   gender: "male" | "female";
   body_type: "top" | "bottom";
   fitting_type: "loose" | "fit" | "tight";
   height_feet: number;
   height_inches: number;
+  qty: number;
   measurement_unit: "cm" | "inch";
   measurements: Record<string, number>;
   reference_image?: File | null;
   reference_link?: string;
   additional_notes?: string;
+}
+
+export interface CustomOrderPayload {
+  // Step 1 — one or more pieces
+  items: CustomOrderItemPayload[];
   // Step 3
   preferred_delivery_date: string;
   shipping_fee: number;
@@ -52,16 +57,20 @@ export interface ApiError {
 
 function buildForm(p: CustomOrderPayload, t: CustomOrderTarget): FormData {
   const fd = new FormData();
-  fd.append("gender", p.gender);
-  fd.append("body_type", p.body_type);
-  fd.append("fitting_type", p.fitting_type);
-  fd.append("height_feet", String(p.height_feet));
-  fd.append("height_inches", String(p.height_inches));
-  fd.append("measurement_unit", p.measurement_unit);
-  Object.entries(p.measurements).forEach(([k, v]) => fd.append(k, String(v)));
-  if (p.reference_image) fd.append("reference_image", p.reference_image);
-  if (p.reference_link) fd.append("reference_link", p.reference_link);
-  if (p.additional_notes) fd.append("additional_notes", p.additional_notes);
+  p.items.forEach((it, i) => {
+    const key = (f: string) => `items[${i}][${f}]`;
+    fd.append(key("gender"), it.gender);
+    fd.append(key("body_type"), it.body_type);
+    fd.append(key("fitting_type"), it.fitting_type);
+    fd.append(key("height_feet"), String(it.height_feet));
+    fd.append(key("height_inches"), String(it.height_inches));
+    fd.append(key("qty"), String(it.qty));
+    fd.append(key("measurement_unit"), it.measurement_unit);
+    Object.entries(it.measurements).forEach(([k, v]) => fd.append(key(k), String(v)));
+    if (it.reference_image) fd.append(key("reference_image"), it.reference_image);
+    if (it.reference_link) fd.append(key("reference_link"), it.reference_link);
+    if (it.additional_notes) fd.append(key("additional_notes"), it.additional_notes);
+  });
   fd.append("preferred_delivery_date", p.preferred_delivery_date);
   fd.append("shipping_fee", String(p.shipping_fee));
   fd.append("agree_terms", p.agree_terms ? "1" : "0");

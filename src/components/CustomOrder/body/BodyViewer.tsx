@@ -216,9 +216,11 @@ interface Props {
   gender: Gender;
   bodyType: BodyType;
   active: MeasureKey | null;
+  /** optional prefix for the chip, e.g. "Item 2" */
+  label?: string;
 }
 
-export default function BodyViewer({ gender, bodyType, active }: Props) {
+export default function BodyViewer({ gender, bodyType, active, label }: Props) {
   const markers = useMemo(() => buildMarkers(gender), [gender]);
   const fields = bodyType === "top" ? TOP_FIELDS : BOTTOM_FIELDS;
   const visible = markers.filter((m) => fields.includes(m.key));
@@ -272,7 +274,7 @@ export default function BodyViewer({ gender, bodyType, active }: Props) {
       {/* Overlay */}
       <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2 pointer-events-none">
         <div className="caption2 font-semibold bg-white/90 border border-line rounded-full px-3 py-1 capitalize">
-          {gender} · {bodyType}
+          {label ? `${label} · ` : ""}{gender} · {bodyType}
         </div>
         {activeDef && (
           <div className="caption2 font-semibold bg-black text-white rounded-full px-3 py-1">

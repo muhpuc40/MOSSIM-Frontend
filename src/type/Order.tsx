@@ -29,7 +29,8 @@ export interface OrderAddress {
   country: string;
 }
 
-export interface CustomOrderDetails {
+export interface CustomOrderItem {
+  id: string;
   gender: "male" | "female";
   body_type: "top" | "bottom";
   fitting_type: "loose" | "fit" | "tight";
@@ -41,7 +42,10 @@ export interface CustomOrderDetails {
   reference_image: string | null;
   reference_link: string | null;
   additional_notes: string | null;
-  preferred_delivery_date: string | null;
+  qty: number;
+  unit_price: number;
+  line_total: number;
+  is_priced: boolean;
   summary: string;
 }
 
@@ -50,7 +54,8 @@ export interface Order {
   order_number: string;
   order_type?: "regular" | "custom";
   price_pending?: boolean;
-  custom_details?: CustomOrderDetails | null;
+  preferred_delivery_date?: string | null;
+  custom_items?: CustomOrderItem[];
   tracking_number?: string | null;
   channel: string;
   status: string;

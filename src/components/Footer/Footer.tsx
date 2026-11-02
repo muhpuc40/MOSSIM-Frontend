@@ -94,7 +94,7 @@ const Footer = () => {
                     </Link>
                     <Link
                       className="caption1 has-line-before duration-300 w-fit pt-2"
-                      href={"custom-order"}>
+                      href={"/custom-order"}>
                       Custom Order
                     </Link>
                   </div>

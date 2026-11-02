@@ -51,9 +51,8 @@ const OrderCard: React.FC<Props> = ({ order, expandedPanel, onTogglePanel, token
               minute: "2-digit",
             })}
             &nbsp;·&nbsp;
-            {order.order_type === "custom"
-              ? "Made to measure"
-              : `${order.item_count} item${order.item_count !== 1 ? "s" : ""}`}
+            {order.order_type === "custom" && "Made to measure · "}
+            {order.item_count} item{order.item_count !== 1 ? "s" : ""}
           </div>
         </div>
         <div className="text-right">

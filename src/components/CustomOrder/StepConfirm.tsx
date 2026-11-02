@@ -93,8 +93,8 @@ export default function StepConfirm({ form, set, errors, setErrors, submitting, 
       </p>
       <div className="bg-surface p-5 rounded-2xl mb-3 space-y-3">
         <div className="flex justify-between caption1">
-          <span className="text-secondary">Order amount</span>
-          <span className="font-semibold">Confirmed by phone call</span>
+          <span className="text-secondary">Order amount ({form.items.length} {form.items.length === 1 ? "item" : "items"})</span>
+          <span className="font-semibold">Each item priced on the call</span>
         </div>
         <div className="flex justify-between caption1">
           <span className="text-secondary">Delivery charge</span>

@@ -92,6 +92,11 @@ const Footer = () => {
                       href={"/shop"}>
                       All Products
                     </Link>
+                    <Link
+                      className="caption1 has-line-before duration-300 w-fit pt-2"
+                      href={"custom-order"}>
+                      Custom Order
+                    </Link>
                   </div>
                   <div className="item flex flex-col basis-1/3 ">
                     <div className="text-button-uppercase pb-3">
